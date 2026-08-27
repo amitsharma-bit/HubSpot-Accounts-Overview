@@ -5,6 +5,9 @@ import { countryFilter, dealershipClassFilters, parseFilterScope } from "@/lib/f
 import { teamTotals, memberTotals, systemBucketTotals, unmappedOwners } from "@/lib/aggregate";
 import type { ValidationReport } from "@/lib/types";
 
+// See src/app/api/teams/route.ts — same reasoning.
+export const maxDuration = 290;
+
 export async function GET(req: NextRequest) {
   const scope = parseFilterScope(req.nextUrl.searchParams);
   const base = [countryFilter(scope.country)];

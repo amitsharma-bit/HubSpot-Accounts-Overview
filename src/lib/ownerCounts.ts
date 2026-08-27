@@ -1,24 +1,24 @@
-import { promises as fs } from "fs";
-import path from "path";
+import { redis } from "./redis";
 import { countCompanies, listOwners } from "./hubspot";
 import { countryFilter, dealershipClassFilters, STATE_PROPERTY, scopeCacheKey, isDefaultScope } from "./filters";
-import { cached } from "./cache";
+import { cached, invalidate } from "./cache";
 import type { OwnerCountsResult, FilterScope, PropertyFilter } from "./types";
 
-const SNAPSHOT_PATH = path.join(process.cwd(), ".cache", "owner-counts.json");
 const SNAPSHOT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const MEMORY_TTL_MS = 30 * 60 * 1000;
 
 /**
  * Bumped whenever the meaning of "default scope" changes (e.g. which HubSpot
- * property counts as country). A snapshot written under an old signature is
- * silently wrong, not just stale — age alone can't catch that, since a
- * logic change can happen well inside the 24h window. Caught live on
- * 2026-08-27 switching country -> country_dropdown: the disk snapshot kept
- * serving the pre-switch ~67k total while every other endpoint had already
- * moved to ~120k.
+ * property counts as country) — baked directly into the Redis key so an old
+ * snapshot from before the change is simply never read, rather than relying
+ * on an age check to catch it. Caught live on 2026-08-27 switching country ->
+ * country_dropdown: the old disk-based snapshot kept serving the pre-switch
+ * ~67k total while every other endpoint had already moved to ~120k, because
+ * "is this snapshot stale" only checked age, not whether the logic that
+ * produced it was still current.
  */
 const SNAPSHOT_SCHEMA_VERSION = 2;
+const SNAPSHOT_KEY = `owner-counts:snapshot:v${SNAPSHOT_SCHEMA_VERSION}`;
 
 function scopeFilters(scope: FilterScope): PropertyFilter[] {
   const filters: PropertyFilter[] = [countryFilter(scope.country)];
@@ -29,28 +29,19 @@ function scopeFilters(scope: FilterScope): PropertyFilter[] {
 }
 
 // Only the default scope (Country=United States, no other filters) gets a
-// disk-backed warm-start snapshot — that's the view everyone lands on, and
-// the only one worth surviving a dev restart. Any other filter combination
-// the sidebar produces just uses the 30-minute in-memory cache; ponytail:
-// don't persist every possible filter combination to disk.
-type Snapshot = OwnerCountsResult & { schemaVersion: number };
-
+// Redis-backed warm-start snapshot — that's the view everyone lands on, and
+// the one the hourly /api/refresh job keeps warm. Any other filter
+// combination the sidebar produces just uses the 30-minute in-memory cache;
+// ponytail: don't persist every possible filter combination.
 async function readSnapshot(): Promise<OwnerCountsResult | null> {
-  try {
-    const raw = await fs.readFile(SNAPSHOT_PATH, "utf8");
-    const parsed = JSON.parse(raw) as Snapshot;
-    if (parsed.schemaVersion !== SNAPSHOT_SCHEMA_VERSION) return null;
-    if (Date.now() - new Date(parsed.computedAt).getTime() < SNAPSHOT_MAX_AGE_MS) return parsed;
-  } catch {
-    // no snapshot yet, or unreadable — compute fresh
-  }
+  const parsed = await redis.get<OwnerCountsResult>(SNAPSHOT_KEY);
+  if (!parsed) return null;
+  if (Date.now() - new Date(parsed.computedAt).getTime() < SNAPSHOT_MAX_AGE_MS) return parsed;
   return null;
 }
 
 async function writeSnapshot(result: OwnerCountsResult): Promise<void> {
-  const snapshot: Snapshot = { ...result, schemaVersion: SNAPSHOT_SCHEMA_VERSION };
-  await fs.mkdir(path.dirname(SNAPSHOT_PATH), { recursive: true });
-  await fs.writeFile(SNAPSHOT_PATH, JSON.stringify(snapshot), "utf8");
+  await redis.set(SNAPSHOT_KEY, result);
 }
 
 /**
@@ -95,7 +86,13 @@ async function computeOwnerCounts(scope: FilterScope): Promise<OwnerCountsResult
 }
 
 export async function getOwnerCounts(scope: FilterScope = {}, forceRefresh = false): Promise<OwnerCountsResult> {
-  return cached(`owner-counts:${scopeCacheKey(scope)}`, MEMORY_TTL_MS, async () => {
+  const key = `owner-counts:${scopeCacheKey(scope)}`;
+  // A cache hit short-circuits before the compute callback below ever runs,
+  // so forceRefresh has to invalidate first — otherwise /api/refresh calling
+  // this within the 30-minute in-memory window would silently return the
+  // stale cached promise instead of actually recomputing.
+  if (forceRefresh) invalidate(key);
+  return cached(key, MEMORY_TTL_MS, async () => {
     if (!forceRefresh && isDefaultScope(scope)) {
       const snapshot = await readSnapshot();
       if (snapshot) return snapshot;

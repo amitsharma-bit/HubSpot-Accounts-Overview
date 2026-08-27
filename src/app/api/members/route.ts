@@ -3,6 +3,9 @@ import { getOwnerCounts } from "@/lib/ownerCounts";
 import { memberTotals } from "@/lib/aggregate";
 import { parseFilterScope } from "@/lib/filters";
 
+// See src/app/api/teams/route.ts — same reasoning.
+export const maxDuration = 290;
+
 export async function GET(req: NextRequest) {
   const team = req.nextUrl.searchParams.get("team");
   const role = req.nextUrl.searchParams.get("role");

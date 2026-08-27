@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import { NavLink } from "@/components/SideNav";
 import { FilterPanel } from "@/components/FilterPanel";
+import { LastRefreshed } from "@/components/LastRefreshed";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </nav>
           </aside>
           <main className="content">{children}</main>
+          <LastRefreshed />
         </div>
       </body>
     </html>

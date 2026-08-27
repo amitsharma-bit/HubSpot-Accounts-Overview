@@ -4,6 +4,11 @@ import { teamTotals, systemBucketTotals, unmappedOwners } from "@/lib/aggregate"
 import { parseFilterScope } from "@/lib/filters";
 import type { TeamsResponse } from "@/lib/types";
 
+// Default scope reads a warm Redis snapshot (fast); any other filter
+// combination computes live (~75-300s, one count per HubSpot owner) — needs
+// room to finish rather than hit Vercel's default 10s function timeout.
+export const maxDuration = 290;
+
 export async function GET(req: NextRequest) {
   const scope = parseFilterScope(req.nextUrl.searchParams);
   const ownerCounts = await getOwnerCounts(scope);

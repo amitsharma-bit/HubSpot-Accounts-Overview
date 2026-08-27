@@ -250,6 +250,29 @@ a {
   gap: 1.75rem;
 }
 
+.last-refreshed {
+  position: fixed;
+  top: 0.85rem;
+  right: 1.25rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+  z-index: 10;
+}
+
+@media (max-width: 860px) {
+  .last-refreshed {
+    position: static;
+    align-self: flex-end;
+    margin: 0 0 -0.5rem;
+  }
+}
+
 .page-header h1 {
   font-size: 1.5rem;
   font-weight: 700;

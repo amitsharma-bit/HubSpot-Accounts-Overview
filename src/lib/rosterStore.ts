@@ -1,5 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
+import { redis } from "./redis";
 import type { Role } from "@/config/roster";
 
 export type Assignment = {
@@ -13,20 +14,36 @@ export type Assignment = {
 
 type Store = { pods: string[]; assignments: Assignment[] };
 
-const STORE_PATH = path.join(process.cwd(), "data", "roster.json");
+// Redis is the real, durable store (required once deployed — Vercel functions
+// can't write to their own filesystem). data/roster.json ships with the app
+// only as the one-time seed for a brand-new, empty Redis store, so the
+// carefully-built initial roster doesn't have to be re-entered by hand.
+const ROSTER_KEY = "roster:v1";
+const SEED_PATH = path.join(process.cwd(), "data", "roster.json");
 
-let cache: Store | null = null;
+let memo: Store | null = null;
+
+async function readSeed(): Promise<Store> {
+  const raw = await fs.readFile(SEED_PATH, "utf8");
+  return JSON.parse(raw) as Store;
+}
 
 async function readStore(): Promise<Store> {
-  if (cache) return cache;
-  const raw = await fs.readFile(STORE_PATH, "utf8");
-  cache = JSON.parse(raw) as Store;
-  return cache;
+  if (memo) return memo;
+  const raw = await redis.get<Store>(ROSTER_KEY);
+  if (raw) {
+    memo = raw;
+    return raw;
+  }
+  const seed = await readSeed();
+  await redis.set(ROSTER_KEY, seed);
+  memo = seed;
+  return seed;
 }
 
 async function writeStore(store: Store): Promise<void> {
-  cache = store;
-  await fs.writeFile(STORE_PATH, JSON.stringify(store, null, 2) + "\n", "utf8");
+  await redis.set(ROSTER_KEY, store);
+  memo = store;
 }
 
 export async function getAssignments(): Promise<Assignment[]> {

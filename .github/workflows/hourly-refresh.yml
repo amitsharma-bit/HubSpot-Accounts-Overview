@@ -1,0 +1,23 @@
+name: Hourly HubSpot refresh
+
+# Vercel's own Cron only runs daily on the Hobby plan, not hourly — this
+# workflow is the actual hourly trigger, pinging the deployed app's
+# /api/refresh route instead. See CLAUDE.md for the full reasoning.
+
+on:
+  schedule:
+    - cron: "0 * * * *" # every hour, on the hour (UTC)
+  workflow_dispatch: {} # allows manually triggering a refresh from the Actions tab
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger /api/refresh
+        run: |
+          curl --fail --silent --show-error \
+            -X POST "${APP_URL}/api/refresh" \
+            -H "Authorization: Bearer ${CRON_SECRET}"
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
