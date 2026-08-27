@@ -1,7 +1,7 @@
 import { countCompanies, getCompanyProperties } from "./hubspot";
 import { COUNTRY_PROPERTY, STATE_PROPERTY, countryFilter, DEFAULT_COUNTRY } from "./filters";
 import { cached } from "./cache";
-import { redis } from "./redis";
+import { getJSON, setJSON } from "./redis";
 import type { PropertyFilter } from "./types";
 
 export type FilterOption = { value: string; count: number };
@@ -17,10 +17,10 @@ const CONCURRENCY = 8;
 
 async function cachedPersistent<T>(key: string, compute: () => Promise<T>): Promise<T> {
   return cached(`filter-options:mem:${key}`, MEMORY_TTL_MS, async () => {
-    const fromRedis = await redis.get<T>(key);
+    const fromRedis = await getJSON<T>(key);
     if (fromRedis) return fromRedis;
     const value = await compute();
-    await redis.set(key, value, { ex: REDIS_TTL_S });
+    await setJSON(key, value, REDIS_TTL_S);
     return value;
   });
 }

@@ -11,9 +11,9 @@ HubSpot properties verified live, not assumed).
 1. Copy `.env.example` to `.env.local` and fill in `HUBSPOT_TOKEN` (a HubSpot
    private-app token with scopes `crm.objects.companies.read` and
    `crm.objects.owners.read`).
-2. Provision Redis and fill in `KV_REST_API_URL` / `KV_REST_API_TOKEN` — see
-   "Deploying to Vercel" below. Required even for local dev: the roster and
-   the owner-count snapshot both live in Redis, not on disk (see why below).
+2. Provision Redis and fill in `REDIS_URL` — see "Deploying to Vercel" below.
+   Required even for local dev: the roster and the owner-count snapshot both
+   live in Redis, not on disk (see why below).
 3. `npm install`
 4. `npm run dev` and open http://localhost:3000
 
@@ -31,12 +31,13 @@ is read-only outside `/tmp`, which itself isn't guaranteed to persist between
 invocations; `fs.writeFile` throws `EROFS`). Two things had to change to
 deploy there:
 
-1. **Persistent storage moved to Redis.** In the Vercel dashboard: Project →
-   Storage → create a **Redis** database (the Marketplace/Upstash-backed
-   integration — Vercel KV itself is deprecated). It auto-injects
-   `KV_REST_API_URL` / `KV_REST_API_TOKEN` into your project's environment
-   variables; no other config needed. For local dev against the same store,
-   run `vercel env pull .env.local` after provisioning.
+1. **Persistent storage moved to Redis.** Any standard Redis instance works —
+   this deployment uses Redis Cloud (redis.io), connected via a plain
+   `redis://user:pass@host:port` connection string over `ioredis` (not the
+   Vercel Marketplace/Upstash REST integration, which speaks a different,
+   HTTP-based protocol — a `redis://` URL won't work with that client, and
+   vice versa). Add `REDIS_URL` as a Vercel project environment variable, and
+   put the same value in `.env.local` for local dev against the same store.
 2. **Hourly refresh runs outside Vercel.** Vercel Cron only allows a *daily*
    schedule on the Hobby plan (hourly needs Pro). Instead,
    `.github/workflows/hourly-refresh.yml` — a free GitHub Actions cron — pings

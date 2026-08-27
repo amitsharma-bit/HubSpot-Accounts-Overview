@@ -1,4 +1,4 @@
-import { redis } from "./redis";
+import { getJSON, setJSON } from "./redis";
 import { countCompanies, listOwners } from "./hubspot";
 import { countryFilter, dealershipClassFilters, STATE_PROPERTY, scopeCacheKey, isDefaultScope } from "./filters";
 import { cached, invalidate } from "./cache";
@@ -34,14 +34,14 @@ function scopeFilters(scope: FilterScope): PropertyFilter[] {
 // combination the sidebar produces just uses the 30-minute in-memory cache;
 // ponytail: don't persist every possible filter combination.
 async function readSnapshot(): Promise<OwnerCountsResult | null> {
-  const parsed = await redis.get<OwnerCountsResult>(SNAPSHOT_KEY);
+  const parsed = await getJSON<OwnerCountsResult>(SNAPSHOT_KEY);
   if (!parsed) return null;
   if (Date.now() - new Date(parsed.computedAt).getTime() < SNAPSHOT_MAX_AGE_MS) return parsed;
   return null;
 }
 
 async function writeSnapshot(result: OwnerCountsResult): Promise<void> {
-  await redis.set(SNAPSHOT_KEY, result);
+  await setJSON(SNAPSHOT_KEY, result);
 }
 
 /**

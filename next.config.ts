@@ -8,6 +8,15 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/api/roster": ["./data/roster.json"],
   },
+  // ioredis isn't on Next's auto-externalized package list (verified against
+  // node_modules/next/dist/docs/.../serverExternalPackages.md). Without this,
+  // Turbopack tries to bundle it for the server and something in ioredis's
+  // internal module structure (its Pipeline class, going by the error) gets
+  // mishandled as a chunk — surfaced on Vercel as every Redis-touching route
+  // throwing `TypeError: Failed to parse URL from /pipeline`, while
+  // /api/overview (no Redis) kept working. This opts ioredis out of bundling
+  // entirely so it's resolved via plain Node `require()` at runtime instead.
+  serverExternalPackages: ["ioredis"],
 };
 
 export default nextConfig;

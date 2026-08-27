@@ -1,6 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
-import { redis } from "./redis";
+import { getJSON, setJSON } from "./redis";
 import type { Role } from "@/config/roster";
 
 export type Assignment = {
@@ -30,19 +30,19 @@ async function readSeed(): Promise<Store> {
 
 async function readStore(): Promise<Store> {
   if (memo) return memo;
-  const raw = await redis.get<Store>(ROSTER_KEY);
+  const raw = await getJSON<Store>(ROSTER_KEY);
   if (raw) {
     memo = raw;
     return raw;
   }
   const seed = await readSeed();
-  await redis.set(ROSTER_KEY, seed);
+  await setJSON(ROSTER_KEY, seed);
   memo = seed;
   return seed;
 }
 
 async function writeStore(store: Store): Promise<void> {
-  await redis.set(ROSTER_KEY, store);
+  await setJSON(ROSTER_KEY, store);
   memo = store;
 }
 
