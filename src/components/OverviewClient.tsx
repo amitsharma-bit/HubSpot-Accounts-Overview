@@ -47,23 +47,19 @@ export function OverviewClient() {
 
       <section className="section">
         <div className="section-title">Role Distribution</div>
-        <RoleDistribution selectedRole={role} onSelectRole={(r) => setParam({ role: r, ownerId: null })} />
+        <RoleDistribution team={team} selectedRole={role} onSelectRole={(r) => setParam({ role: r, ownerId: null })} />
       </section>
 
       <section className="section">
         <div className="section-title-row">
           <div className="section-title">Team Members{team ? ` — ${team}` : ""}</div>
         </div>
-        <div className="table-card">
-          <div className="table-scroll">
-            <MemberTable
-              team={team}
-              role={role}
-              selectedOwnerKey={ownerKey}
-              onSelectOwner={(key) => setParam({ ownerId: key })}
-            />
-          </div>
-        </div>
+        <MemberTable
+          team={team}
+          role={role}
+          selectedOwnerKey={ownerKey}
+          onSelectOwner={(key) => setParam({ ownerId: key })}
+        />
       </section>
 
       <section className="section">

@@ -98,6 +98,48 @@ export type AccountsResponse = {
   cappedByHubSpot: boolean;
 };
 
+export type CompanyDetail = {
+  id: string;
+  name: string | null;
+  domain: string | null;
+  ownerName: string | null;
+  team: string | null;
+  role: string | null;
+  lifecycleStage: string | null;
+  hubspotTeamId: string | null;
+  gdLevel: string | null;
+  numberOfUsedCars: number | null;
+  potentialRooftops: number | null;
+  gdName: string | null;
+  gdId: string | null;
+  inGroupDealership: boolean;
+  numAssociatedContacts: number | null;
+  lastActivityDate: string | null;
+  ownerAssignedDate: string | null;
+  hubspotUrl: string | null;
+};
+
+export type GroupCompanyRow = {
+  id: string;
+  name: string | null;
+  domain: string | null;
+  ownerName: string | null;
+  ownerAssignedDate: string | null;
+  lastActivityDate: string | null;
+  potentialRooftops: number | null;
+};
+
+export type GroupDetail = {
+  gdId: string;
+  gdName: string | null;
+  gdStage: string | null;
+  gdLastActivityDate: string | null;
+  totalContacts: number;
+  totalCompanies: number;
+  totalPotentialRooftops: number;
+  companies: GroupCompanyRow[];
+};
+
 export type UnmappedOwner = {
   ownerId: number;
   name: string;

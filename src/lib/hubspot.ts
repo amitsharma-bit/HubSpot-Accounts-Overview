@@ -35,9 +35,18 @@ async function hubspotFetch(path: string, init: RequestInit, attempt = 1): Promi
   }
   if (!res.ok) {
     const body = await res.text().catch(() => "");
-    throw new Error(`HubSpot ${path} failed: ${res.status} ${body}`);
+    throw new HubspotHttpError(res.status, `HubSpot ${path} failed: ${res.status} ${body}`);
   }
   return res;
+}
+
+export class HubspotHttpError extends Error {
+  constructor(
+    public status: number,
+    message: string
+  ) {
+    super(message);
+  }
 }
 
 export class PageBeyondLimitError extends Error {
@@ -70,22 +79,51 @@ export async function countCompanies(filterGroups: FilterGroup[]): Promise<numbe
   return total;
 }
 
-const ACCOUNTS_PAGE_SIZE = 100;
+const ACCOUNTS_PAGE_SIZE = 25;
+const SCAN_BATCH_SIZE = 100;
 const HUBSPOT_SEARCH_ROW_CAP = 10_000;
+
+export type SortSpec = { propertyName: string; direction: "ASCENDING" | "DESCENDING" };
 
 export async function searchCompanies(
   filterGroups: FilterGroup[],
   page: number,
-  properties: string[]
+  properties: string[],
+  opts?: { pageSize?: number; sort?: SortSpec }
 ): Promise<{ total: number; results: { id: string; properties: Record<string, string | null> }[] }> {
-  if ((page - 1) * ACCOUNTS_PAGE_SIZE >= HUBSPOT_SEARCH_ROW_CAP) throw new PageBeyondLimitError();
+  const pageSize = opts?.pageSize ?? ACCOUNTS_PAGE_SIZE;
+  if ((page - 1) * pageSize >= HUBSPOT_SEARCH_ROW_CAP) throw new PageBeyondLimitError();
+  // HubSpot's search API rejects more than one sort field ("too many sorts,
+  // max allowed: 1"), so a stable hs_object_id tie-breaker can't be appended
+  // alongside an explicit column sort — only used as the sole sort when no
+  // column sort is requested.
+  const sorts: SortSpec[] = opts?.sort ? [opts.sort] : [{ propertyName: "hs_object_id", direction: "ASCENDING" }];
   return search({
     filterGroups,
     properties,
-    limit: ACCOUNTS_PAGE_SIZE,
-    after: String((page - 1) * ACCOUNTS_PAGE_SIZE),
-    sorts: [{ propertyName: "hs_object_id", direction: "ASCENDING" }],
+    limit: pageSize,
+    after: String((page - 1) * pageSize),
+    sorts,
   });
+}
+
+export async function getCompanyById(id: string, properties: string[]): Promise<{ id: string; properties: Record<string, string | null> } | null> {
+  const qs = new URLSearchParams({ properties: properties.join(",") });
+  try {
+    const res = await hubspotFetch(`/crm/v3/objects/companies/${encodeURIComponent(id)}?${qs.toString()}`, { method: "GET" });
+    return res.json();
+  } catch (err) {
+    if (err instanceof HubspotHttpError && err.status === 404) return null;
+    throw err;
+  }
+}
+
+export type AccountInfo = { portalId: number; uiDomain: string };
+
+export async function getAccountInfo(): Promise<AccountInfo> {
+  const res = await hubspotFetch("/account-info/v3/details", { method: "GET" });
+  const json = await res.json();
+  return { portalId: json.portalId, uiDomain: json.uiDomain };
 }
 
 /**
@@ -109,7 +147,7 @@ export async function* scanCompanies(
       const page = await search({
         filterGroups: anchored,
         properties,
-        limit: ACCOUNTS_PAGE_SIZE,
+        limit: SCAN_BATCH_SIZE,
         after: String(after),
         sorts: [{ propertyName: "hs_object_id", direction: "ASCENDING" }],
       });
@@ -117,7 +155,7 @@ export async function* scanCompanies(
       sawAny = true;
       yield page.results;
       lastId = page.results[page.results.length - 1].id;
-      after += ACCOUNTS_PAGE_SIZE;
+      after += SCAN_BATCH_SIZE;
       if (after >= HUBSPOT_SEARCH_ROW_CAP) break;
     }
     if (!sawAny) break;

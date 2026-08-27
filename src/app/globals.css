@@ -667,3 +667,339 @@ tr.row-selected {
     background-position: 0 50%;
   }
 }
+
+/* ---------- Drawer (Company / Group detail) ---------- */
+
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(23, 25, 35, 0.28);
+  backdrop-filter: blur(2px);
+  z-index: 100;
+  display: flex;
+  justify-content: flex-end;
+  animation: overlay-in 0.2s var(--ease);
+}
+
+.drawer {
+  width: min(480px, 100vw);
+  height: 100%;
+  background: var(--surface);
+  border-radius: 20px 0 0 20px;
+  box-shadow: -12px 0 40px -12px rgba(23, 25, 35, 0.25);
+  display: flex;
+  flex-direction: column;
+  animation: drawer-in 0.28s var(--ease);
+}
+
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.drawer-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  border-radius: 20px 0 0 0;
+}
+
+.drawer-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.drawer-subtitle {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-top: 0.15rem;
+}
+
+.drawer-close {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--muted);
+  border-radius: 999px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex: none;
+  transition: background 0.15s var(--ease), color 0.15s var(--ease);
+}
+
+.drawer-close:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.drawer-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.drawer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.drawer-section-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.drawer-fields {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.drawer-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.86rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.drawer-field:last-child {
+  border-bottom: none;
+}
+
+.drawer-field-label {
+  color: var(--muted);
+  flex: none;
+}
+
+.drawer-field-value {
+  font-weight: 600;
+  text-align: right;
+  word-break: break-word;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.link-button:hover {
+  opacity: 0.8;
+}
+
+@media (max-width: 640px) {
+  .drawer {
+    width: 100vw;
+    border-radius: 0;
+  }
+  .drawer-header {
+    border-radius: 0;
+  }
+}
+
+/* ---------- Member cards ---------- */
+
+.member-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 0.85rem;
+}
+
+.member-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.95rem 1.05rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  cursor: pointer;
+  transition: border-color 0.15s var(--ease), transform 0.15s var(--ease), box-shadow 0.15s var(--ease);
+}
+
+.member-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.member-card.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.member-card-name {
+  font-weight: 700;
+  font-size: 0.92rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.member-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.member-card-team {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.member-card-count {
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.member-card-count-label {
+  font-size: 0.7rem;
+  color: var(--muted-2);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* ---------- Compact search ---------- */
+
+.search-box-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted-2);
+  width: 240px;
+  flex: none;
+}
+
+.search-box-compact input {
+  border: none;
+  outline: none;
+  background: none;
+  color: var(--text);
+  padding: 0.45rem 0;
+  font-size: 0.83rem;
+  width: 100%;
+}
+
+/* ---------- Sortable table headers ---------- */
+
+th.sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+th.sortable:hover {
+  color: var(--text);
+}
+
+.sort-indicator {
+  display: inline-flex;
+  vertical-align: -3px;
+  margin-left: 0.25rem;
+  opacity: 0.5;
+}
+
+th.sort-active .sort-indicator {
+  opacity: 1;
+  color: var(--accent);
+}
+
+/* ---------- Column management ---------- */
+
+.columns-menu-wrap {
+  position: relative;
+}
+
+.columns-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.4rem);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  padding: 0.5rem;
+  width: 240px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.column-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.83rem;
+}
+
+.column-row:hover {
+  background: var(--bg);
+}
+
+.column-row.dragging {
+  opacity: 0.4;
+}
+
+.column-drag-handle {
+  color: var(--muted-2);
+  cursor: grab;
+  flex: none;
+}
+
+.columns-menu-footer {
+  border-top: 1px solid var(--border);
+  margin-top: 0.3rem;
+  padding-top: 0.4rem;
+}

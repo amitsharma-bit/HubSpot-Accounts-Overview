@@ -8,6 +8,13 @@ const PATHS: Record<string, string> = {
   grid: "M3 3h6v6H3V3Zm8 0h6v6h-6V3ZM3 11h6v6H3v-6Zm8 0h6v6h-6v-6Z",
   shield: "M10 2 3 5v5c0 5 3 7.5 7 8.5 4-1 7-3.5 7-8.5V5l-7-3Z",
   search: "M9 15a6 6 0 1 0 0-12 6 6 0 0 0 0 12Zm10 3-4.3-4.3",
+  close: "M4 4l12 12M16 4 4 16",
+  externalLink: "M8 5H4.5A1.5 1.5 0 0 0 3 6.5v9A1.5 1.5 0 0 0 4.5 17h9a1.5 1.5 0 0 0 1.5-1.5V12M12 3h5v5M17 3l-9 9",
+  chevronUp: "M5 12l5-5 5 5",
+  chevronDown: "M5 8l5 5 5-5",
+  chevronsUpDown: "M7 7l3-3 3 3M7 13l3 3 3-3",
+  columns: "M4 3h12a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm4 0v14m5-14v14",
+  dragHandle: "M7 5h.01M7 10h.01M7 15h.01M13 5h.01M13 10h.01M13 15h.01",
 };
 
 export function Icon({ name, size = 18 }: { name: keyof typeof PATHS; size?: number }) {

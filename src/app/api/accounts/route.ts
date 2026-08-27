@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchCompanies, listOwners, PageBeyondLimitError } from "@/lib/hubspot";
+import type { SortSpec } from "@/lib/hubspot";
 import { buildFilterGroups, normalizeGroupFlag, classifyDealership, parseFilterScope, COUNTRY_PROPERTY, STATE_PROPERTY } from "@/lib/filters";
 import { SYSTEM_OWNERS } from "@/config/roster";
 import { getAssignments, getOwnerToAssignment } from "@/lib/rosterStore";
@@ -22,6 +23,25 @@ const PROPERTIES = [
   "hs_object_id",
 ];
 
+const PAGE_SIZE = 25;
+
+// Only real HubSpot properties can be sorted server-side, across the whole
+// filtered dataset. "owner" (by name) and "team" aren't stored HubSpot
+// properties — they're joined in from the roster — so they're sorted
+// client-side, over whatever rows are already loaded, instead (see
+// AccountsTable.tsx). Requesting one of those two here is a no-op.
+const SERVER_SORT_PROPERTIES: Record<string, string> = {
+  name: "name",
+  domain: "domain",
+  country: COUNTRY_PROPERTY,
+  state: STATE_PROPERTY,
+  city: "city",
+  typeOfDealership: "type_of_dealership",
+  gdName: "gd_name",
+  potentialRooftops: "potential_rooftops",
+  lastActivityDate: "rooftop_last_activity",
+};
+
 export async function GET(req: NextRequest) {
   const params = req.nextUrl.searchParams;
   const page = Math.max(1, Number(params.get("page") ?? "1"));
@@ -30,6 +50,11 @@ export async function GET(req: NextRequest) {
   const ownerIdParam = params.get("ownerId");
   const q = params.get("q") ?? undefined;
   const scope = parseFilterScope(params);
+
+  const sortByParam = params.get("sortBy");
+  const sortDirParam = params.get("sortDir") === "desc" ? "DESCENDING" : "ASCENDING";
+  const sortProperty = sortByParam ? SERVER_SORT_PROPERTIES[sortByParam] : undefined;
+  const sort: SortSpec | undefined = sortProperty ? { propertyName: sortProperty, direction: sortDirParam } : undefined;
 
   const [owners, assignments, ownerToAssignment] = await Promise.all([
     cached("owners-list", 24 * 60 * 60 * 1000, listOwners),
@@ -63,7 +88,7 @@ export async function GET(req: NextRequest) {
 
   let result;
   try {
-    result = await searchCompanies(filterGroups, page, PROPERTIES);
+    result = await searchCompanies(filterGroups, page, PROPERTIES, { pageSize: PAGE_SIZE, sort });
   } catch (err) {
     if (err instanceof PageBeyondLimitError) {
       return NextResponse.json({ error: err.message }, { status: 400 });
@@ -97,13 +122,13 @@ export async function GET(req: NextRequest) {
     };
   });
 
-  const pageCap = 100;
+  const pageCap = 400; // HubSpot's 10,000-row search ceiling / 25 per page
   const body: AccountsResponse = {
     rows,
     total: result.total,
     page,
-    pageSize: 100,
-    totalPages: Math.min(pageCap, Math.ceil(result.total / 100)),
+    pageSize: PAGE_SIZE,
+    totalPages: Math.min(pageCap, Math.ceil(result.total / PAGE_SIZE)),
     pageCap,
     cappedByHubSpot: result.total > 10_000,
   };
