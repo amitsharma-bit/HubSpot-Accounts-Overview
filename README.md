@@ -1,10 +1,10 @@
 # HubSpot US Accounts Overview
 
 Internal dashboard answering: how many US accounts does each rep own, which
-team are they on, how are accounts distributed by role, and which accounts
+pod/team they're on, how are accounts distributed by role, and which accounts
 belong to whom — computed server-side from HubSpot, never from rows loaded in
-the browser. See `docs` in the approved plan for the full data-correctness
-rationale (real HubSpot properties verified live, not assumed).
+the browser. See CLAUDE.md for the full data-correctness rationale (real
+HubSpot properties verified live, not assumed).
 
 ## Setup
 
@@ -22,19 +22,29 @@ instant until the snapshot expires.
 
 ## Editing the team roster
 
-`src/config/roster.ts` is the single source of truth for who's on which team,
-in what role, and which HubSpot owner ID(s) they map to. Add, rename, or move
-a person by editing this file directly — nothing else in the app hardcodes
-names, teams, or roles.
+`data/roster.json` is the single source of truth for who's on which pod, in
+what role, and which HubSpot owner ID(s) they map to. It's a real, git-tracked
+data file — edit it by hand, or use the Control Center page's "Add / Update
+assignment" form, which writes to it through `POST /api/roster`
+(`src/lib/rosterStore.ts` owns all reads/writes and an in-memory cache).
+Pods are open-ended: assigning someone to a pod name that doesn't exist yet
+creates it.
 
-Any HubSpot owner who has US accounts but isn't in this file shows up on the
-Control Center page as an "Unmapped Owner" — never silently dropped.
+`src/config/roster.ts` only holds two things that are *not* user-editable
+data: the fixed `Role` enum and `SYSTEM_OWNERS`, a short list of non-human
+bulk-import/holding owners (e.g. `salesops .`) that always get their own
+labeled bucket instead of counting as "unmapped."
+
+Any HubSpot owner who has US accounts but isn't in `data/roster.json` shows
+up in the Control Center's people table with role "—" and pod "Unassigned" —
+never silently dropped.
 
 ## Verifying correctness
 
-`npm run check` runs a handful of `assert`-based smoke checks: the
-country-filter constant against live data, the group-dealership flag
-normalization truth table, `buildFilterGroups`'s HubSpot API cap invariants,
-and (with `npm run dev` running in another terminal) the live reconciliation
-identity behind every total on the dashboard. The full validation report is
-also rendered on the Control Center page.
+`npm run check` runs a handful of `assert`-based smoke checks: that
+`country_dropdown='United States'` actually returns data, the
+group-dealership flag normalization truth table, the dealership
+classification truth table, `buildFilterGroups`'s HubSpot API cap
+invariants, and (with `npm run dev` running in another terminal) the live
+reconciliation identity behind every total on the dashboard. The full
+validation report is also rendered on the Control Center page.

@@ -26,7 +26,10 @@ export function useJson<T>(url: string | null): { data: T | null; loading: boole
         if (!cancelled) setData(json);
       })
       .catch((err) => {
-        if (!cancelled) setError(String(err));
+        // Technical detail goes to the console for debugging; the UI only
+        // ever shows a friendly message — never a raw status code or stack.
+        console.error(`useJson(${url}) failed:`, err);
+        if (!cancelled) setError("Unable to load HubSpot data. Please try again.");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

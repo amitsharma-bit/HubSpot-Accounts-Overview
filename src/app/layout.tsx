@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
+import { NavLink } from "@/components/SideNav";
+import { FilterPanel } from "@/components/FilterPanel";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -22,11 +24,25 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>
-        <nav className="topnav">
-          <Link href="/">Overview</Link>
-          <Link href="/control-center">Control Center</Link>
-        </nav>
-        <main className="page">{children}</main>
+        <div className="shell">
+          <aside className="sidebar">
+            <div className="brand">
+              <span className="brand-mark">HS</span>
+              <span className="brand-text">
+                US Accounts
+                <span>Overview</span>
+              </span>
+            </div>
+            <nav className="sidenav">
+              <NavLink href="/" label="Overview" icon="grid" />
+              <Suspense fallback={null}>
+                <FilterPanel />
+              </Suspense>
+              <NavLink href="/control-center" label="Control Center" icon="shield" />
+            </nav>
+          </aside>
+          <main className="content">{children}</main>
+        </div>
       </body>
     </html>
   );

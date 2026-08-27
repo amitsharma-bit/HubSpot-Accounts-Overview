@@ -7,19 +7,13 @@ try {
   // no .env.local yet — offline checks below still run; live checks will fail with a clear error
 }
 
-import { GROUP_FLAG_TRUE, normalizeGroupFlag, buildFilterGroups, COUNTRY_FILTER } from "../src/lib/filters";
+import { GROUP_FLAG_TRUE, normalizeGroupFlag, buildFilterGroups, classifyDealership, COUNTRY_PROPERTY, DEFAULT_COUNTRY } from "../src/lib/filters";
 import { countCompanies } from "../src/lib/hubspot";
 
-async function checkCountryFilterConstant() {
-  const [combined, us, usa, usShort] = await Promise.all([
-    countCompanies([{ filters: [COUNTRY_FILTER] }]),
-    countCompanies([{ filters: [{ propertyName: "country", operator: "EQ", value: "United States" }] }]),
-    countCompanies([{ filters: [{ propertyName: "country", operator: "EQ", value: "USA" }] }]),
-    countCompanies([{ filters: [{ propertyName: "country", operator: "EQ", value: "US" }] }]),
-  ]);
-  assert.ok(us > 0 && usa > 0 && usShort > 0, "each US country-value variant should have at least one company");
-  assert.equal(combined, us + usa + usShort, "IN-filter total must equal the sum of the individual EQ counts");
-  console.log(`[PASS] country filter constant: ${combined} = ${us} + ${usa} + ${usShort}`);
+async function checkCountryFilterHasData() {
+  const total = await countCompanies([{ filters: [{ propertyName: COUNTRY_PROPERTY, operator: "EQ", value: DEFAULT_COUNTRY }] }]);
+  assert.ok(total > 0, `${COUNTRY_PROPERTY}='${DEFAULT_COUNTRY}' returned 0 — did the property name or value change in HubSpot?`);
+  console.log(`[PASS] ${COUNTRY_PROPERTY}='${DEFAULT_COUNTRY}': ${total} companies`);
 }
 
 function checkGroupFlagNormalization() {
@@ -32,9 +26,20 @@ function checkGroupFlagNormalization() {
   console.log("[PASS] normalizeGroupFlag truth table");
 }
 
+function checkClassification() {
+  // Group membership takes priority over type — verified live to reproduce the
+  // user's baseline exactly (see src/lib/filters.ts's classifyDealership doc).
+  assert.equal(classifyDealership("Franchise", "true"), "Group");
+  assert.equal(classifyDealership("Independent", "true"), "Group");
+  assert.equal(classifyDealership("Franchise", "false"), "Franchise");
+  assert.equal(classifyDealership("Independent", "false"), "Independent");
+  assert.equal(classifyDealership(null, "false"), null);
+  console.log("[PASS] classifyDealership truth table");
+}
+
 function checkFilterGroupInvariants() {
   const cases = [
-    { ownerIds: [1, 2, 3], city: "Dallas", state: "Texas", typeOfDealership: "Franchise", searchTerm: "auto", searchMatchedOwnerIds: [4, 5] },
+    { ownerIds: [1, 2, 3], city: "Dallas", state: "Texas", dealershipClass: "Franchise" as const, searchTerm: "auto", searchMatchedOwnerIds: [4, 5] },
     { unownedOnly: true },
     {},
   ];
@@ -44,7 +49,7 @@ function checkFilterGroupInvariants() {
     for (const g of groups) {
       assert.ok(g.filters.length <= 6, "at most 6 filters per group (HubSpot cap)");
       assert.ok(
-        g.filters.some((f) => f.propertyName === "country"),
+        g.filters.some((f) => f.propertyName === COUNTRY_PROPERTY),
         "every group must carry the country filter"
       );
     }
@@ -61,17 +66,18 @@ async function checkLiveValidation() {
   const report = await res.json();
   assert.equal(report.reconciliation.pass, true, `reconciliation failed, delta=${report.reconciliation.delta}`);
   assert.equal(
-    report.dealershipTypeReconciliation.pass,
+    report.classificationReconciliation.pass,
     true,
-    `franchise+independent != total: ${JSON.stringify(report.dealershipTypeReconciliation)}`
+    `independent+franchise+inGroupDealership != total: ${JSON.stringify(report.classificationReconciliation)}`
   );
   console.log("[PASS] live /api/validate reconciliation");
 }
 
 async function main() {
   checkGroupFlagNormalization();
+  checkClassification();
   checkFilterGroupInvariants();
-  await checkCountryFilterConstant();
+  await checkCountryFilterHasData();
   await checkLiveValidation();
   console.log("\nAll checks passed.");
 }

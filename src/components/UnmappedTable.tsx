@@ -1,86 +1,48 @@
 "use client";
 
-import { useState } from "react";
 import { useJson } from "@/lib/useJson";
 import { TableSkeleton } from "./Skeletons";
+import { IconBadge } from "./Icon";
 import type { UnmappedResponse } from "@/lib/types";
 
+/**
+ * The detailed unmapped-owner listing now lives in PeopleTable (every HubSpot
+ * owner, searchable, editable) — this component only surfaces what that table
+ * can't: the non-human system/bulk-import buckets and the true no-owner-at-all
+ * count, both of which affect account totals but aren't "people" to assign.
+ */
 export function UnmappedTable() {
-  const [page, setPage] = useState(1);
-  const { data, loading, error } = useJson<UnmappedResponse>(`/api/unmapped?page=${page}&pageSize=50`);
+  const { data, loading, error } = useJson<UnmappedResponse>(`/api/unmapped?page=1&pageSize=1`);
 
-  if (loading && !data) return <TableSkeleton />;
-  if (error || !data) return <div className="muted">Failed to load unmapped owners: {error}</div>;
+  if (loading) return <TableSkeleton />;
+  if (error || !data) return <div className="muted">Failed to load system buckets: {error}</div>;
+  if (data.systemBuckets.length === 0 && data.unowned.count === 0) return null;
 
   return (
-    <div>
-      {data.systemBuckets.length > 0 && (
-        <div style={{ marginBottom: "1rem" }}>
-          <div className="section-title">System / Bulk-Import Buckets</div>
-          <table>
-            <thead>
-              <tr>
-                <th>Owner</th>
-                <th>Owner ID</th>
-                <th>US Accounts</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.systemBuckets.map((b) => (
-                <tr key={b.ownerId}>
-                  <td>{b.name}</td>
-                  <td>{b.ownerId}</td>
-                  <td>{b.count.toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+    <div className="section">
+      <div className="section-title">System Buckets &amp; Unowned</div>
+      <div className="card-grid">
+        {data.systemBuckets.map((b) => (
+          <div key={b.ownerId} className="card">
+            <div className="card-top">
+              <div>
+                <div className="label">{b.name}</div>
+                <div className="value">{b.count.toLocaleString()}</div>
+                <div className="sub">bulk-import bucket, not a rep — owner ID {b.ownerId}</div>
+              </div>
+              <IconBadge name="layers" color="#9CA3AF" />
+            </div>
+          </div>
+        ))}
+        <div className="card">
+          <div className="card-top">
+            <div>
+              <div className="label">No Owner At All</div>
+              <div className="value">{data.unowned.count.toLocaleString()}</div>
+            </div>
+            <IconBadge name="userX" color="#9CA3AF" />
+          </div>
         </div>
-      )}
-
-      <div className="section-title">
-        Unmapped Owner ({data.total.toLocaleString()} HubSpot owner{data.total === 1 ? "" : "s"} with US accounts, not on
-        the roster)
-      </div>
-      <p className="muted">
-        Every owner below has at least one US account but is not assigned to a team in the roster config. Never
-        silently excluded — add them to <code>src/config/roster.ts</code> to map them.
-      </p>
-      <table>
-        <thead>
-          <tr>
-            <th>Owner</th>
-            <th>Owner ID</th>
-            <th>Status</th>
-            <th>US Accounts</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.unmappedOwners.map((o) => (
-            <tr key={o.ownerId}>
-              <td>{o.name}</td>
-              <td>{o.ownerId}</td>
-              <td>{o.archived ? "archived" : "active"}</td>
-              <td>{o.count.toLocaleString()}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <div className="pagination" style={{ marginTop: "0.5rem" }}>
-        <span className="muted">
-          Page {page} of {Math.max(1, Math.ceil(data.total / data.pageSize))}
-        </span>
-        <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-          Previous
-        </button>
-        <button disabled={page * data.pageSize >= data.total} onClick={() => setPage((p) => p + 1)}>
-          Next
-        </button>
-      </div>
-
-      <div className="card" style={{ marginTop: "1rem", maxWidth: 240 }}>
-        <div className="label">No Owner At All</div>
-        <div className="value">{data.unowned.count.toLocaleString()}</div>
       </div>
     </div>
   );

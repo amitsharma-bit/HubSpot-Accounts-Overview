@@ -124,7 +124,25 @@ export async function* scanCompanies(
   }
 }
 
-export type HubspotOwner = { ownerId: number; name: string; archived: boolean };
+export type HubspotProperty = {
+  name: string;
+  label: string;
+  type: string;
+  options: { value: string; label: string }[];
+};
+
+export async function getCompanyProperties(): Promise<HubspotProperty[]> {
+  const res = await hubspotFetch("/crm/v3/properties/companies?archived=false", { method: "GET" });
+  const json = await res.json();
+  return (json.results ?? []).map((p: { name: string; label: string; type: string; options?: { value: string; label: string }[] }) => ({
+    name: p.name,
+    label: p.label,
+    type: p.type,
+    options: p.options ?? [],
+  }));
+}
+
+export type HubspotOwner = { ownerId: number; name: string; email: string | null; archived: boolean };
 
 export async function listOwners(): Promise<HubspotOwner[]> {
   const [active, archived] = await Promise.all([fetchOwnerPage(false), fetchOwnerPage(true)]);
@@ -141,7 +159,7 @@ async function fetchOwnerPage(archived: boolean): Promise<HubspotOwner[]> {
     const json = await res.json();
     for (const o of json.results ?? []) {
       const name = [o.firstName, o.lastName].filter(Boolean).join(" ").trim() || o.email || String(o.id);
-      owners.push({ ownerId: Number(o.id), name, archived });
+      owners.push({ ownerId: Number(o.id), name, email: o.email ?? null, archived });
     }
     after = json.paging?.next?.after;
   } while (after);

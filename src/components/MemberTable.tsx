@@ -1,7 +1,10 @@
 "use client";
 
 import { useJson } from "@/lib/useJson";
+import { useScopeParams } from "@/lib/useScopeParams";
 import { TableSkeleton } from "./Skeletons";
+import { Avatar } from "./Avatar";
+import { RoleBadge } from "./Badge";
 import type { MemberTotal } from "@/lib/types";
 
 export function MemberTable({
@@ -15,7 +18,7 @@ export function MemberTable({
   selectedOwnerKey: string | null;
   onSelectOwner: (ownerKey: string | null) => void;
 }) {
-  const params = new URLSearchParams();
+  const params = useScopeParams();
   if (team) params.set("team", team);
   if (role) params.set("role", role);
   const { data, loading, error } = useJson<{ members: MemberTotal[] }>(`/api/members?${params.toString()}`);
@@ -41,15 +44,19 @@ export function MemberTable({
           return (
             <tr
               key={ownerKey}
-              className="clickable-row"
-              style={isSelected ? { background: "rgba(99,102,241,0.12)" } : undefined}
+              className={`clickable-row${isSelected ? " row-selected" : ""}`}
               onClick={() => onSelectOwner(isSelected ? null : ownerKey)}
             >
               <td>
-                {m.name}
-                {m.isMerged && <span className="chip" style={{ marginLeft: "0.4rem" }}>merged owner IDs</span>}
+                <span className="person">
+                  <Avatar name={m.name} />
+                  {m.name}
+                  {m.isMerged && <span className="chip">merged owner IDs</span>}
+                </span>
               </td>
-              <td>{m.role}</td>
+              <td>
+                <RoleBadge role={m.role} />
+              </td>
               <td>{m.team}</td>
               <td>{m.accountCount.toLocaleString()}</td>
             </tr>

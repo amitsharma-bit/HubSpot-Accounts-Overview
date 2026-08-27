@@ -1,12 +1,32 @@
-import type { FilterGroup, PropertyFilter } from "./types";
+import type { FilterGroup, PropertyFilter, FilterScope } from "./types";
 
 /**
- * Verified live against the real portal (see docs/../plan): `country` is free
- * text, not an enum, and these are the only three values that mean "US".
- * Do NOT use `country_dropdown` (proven unreliable — contradicts `country` on
- * the same records) or `hs_country_code` (only ~3% of companies have it set).
+ * ROOT-CAUSE DECISION (see conversation, 2026-08-27): this app originally used
+ * the free-text `country` property (values 'United States'/'USA'/'US'), which
+ * gave ~67k accounts and was geographically self-consistent per record. The
+ * user's external "current correct" baseline (119,751) instead comes from
+ * `country_dropdown`, confirmed by direct live query. `country_dropdown` is
+ * known to be self-contradictory on individual records (e.g. records tagged
+ * `country_dropdown='United States'` whose real `country` free-text says
+ * "Canada"/"India") — flagged explicitly before this was chosen. The user
+ * chose `country_dropdown` anyway as the standard going forward; this file
+ * implements that choice. If accuracy complaints resurface, this is the first
+ * place to revisit.
  */
-export const US_COUNTRY_VALUES = ["United States", "USA", "US"] as const;
+export const COUNTRY_PROPERTY = "country_dropdown";
+export const DEFAULT_COUNTRY = "United States";
+
+/**
+ * The best-populated of three competing state-like properties in this portal
+ * (`state_drop_down`, `overall_state_dropdown`, free-text `state`) — verified
+ * live: under country_dropdown='United States' scope, state_drop_down is
+ * populated on 103,896/119,751 records vs. 62,320 and 66,522 for the other
+ * two. It also includes a stray "Ontario" option (a legacy data artifact) —
+ * left as-is rather than special-cased, since the option-discovery endpoint
+ * only surfaces values with >0 matching records for the active scope, so it
+ * simply won't appear unless real records actually use it.
+ */
+export const STATE_PROPERTY = "state_drop_down";
 
 /**
  * `is_this_is_a_part_of_group_dealership_` is an enumeration whose real stored
@@ -27,11 +47,31 @@ export function normalizeGroupFlag(raw: string | null | undefined): boolean {
   return !!raw && (GROUP_FLAG_TRUE as readonly string[]).includes(raw);
 }
 
-export const COUNTRY_FILTER: PropertyFilter = {
-  propertyName: "country",
-  operator: "IN",
-  values: [...US_COUNTRY_VALUES],
-};
+/**
+ * Dealership classification (see conversation, 2026-08-27): `type_of_dealership`
+ * is natively just Independent/Franchise (verified: exactly 2 options, no
+ * third native value). "In Group Dealership" as a third, mutually-exclusive
+ * category is a business rule composed from two real properties — group
+ * membership takes priority over type. Verified live: under
+ * country_dropdown='United States' scope this composition reproduces the
+ * user's 119,751 baseline exactly (Independent-not-in-group + Franchise-not-
+ * in-group + In-Group = total, no gaps, no overlap).
+ */
+export type DealershipClass = "Independent" | "Franchise" | "Group";
+
+export function classifyDealership(
+  typeOfDealership: string | null | undefined,
+  groupFlagRaw: string | null | undefined
+): DealershipClass | null {
+  if (normalizeGroupFlag(groupFlagRaw)) return "Group";
+  if (typeOfDealership === "Franchise") return "Franchise";
+  if (typeOfDealership === "Independent") return "Independent";
+  return null;
+}
+
+export function countryFilter(country: string = DEFAULT_COUNTRY): PropertyFilter {
+  return { propertyName: COUNTRY_PROPERTY, operator: "EQ", value: country };
+}
 
 export const GROUP_DEALERSHIP_FILTER: PropertyFilter = {
   propertyName: "is_this_is_a_part_of_group_dealership_",
@@ -39,12 +79,47 @@ export const GROUP_DEALERSHIP_FILTER: PropertyFilter = {
   values: [...GROUP_FLAG_TRUE],
 };
 
+export const NOT_GROUP_DEALERSHIP_FILTER: PropertyFilter = {
+  propertyName: "is_this_is_a_part_of_group_dealership_",
+  operator: "NOT_IN",
+  values: [...GROUP_FLAG_TRUE],
+};
+
+export function dealershipClassFilters(cls: DealershipClass): PropertyFilter[] {
+  if (cls === "Group") return [GROUP_DEALERSHIP_FILTER];
+  return [{ propertyName: "type_of_dealership", operator: "EQ", value: cls }, NOT_GROUP_DEALERSHIP_FILTER];
+}
+
+/** Shared across every API route so the sidebar filters mean the same thing everywhere. */
+export function parseFilterScope(params: URLSearchParams): FilterScope {
+  const dealershipClass = params.get("dealershipClass");
+  return {
+    country: params.get("country") ?? undefined,
+    state: params.get("state") ?? undefined,
+    city: params.get("city") ?? undefined,
+    dealershipClass:
+      dealershipClass === "Independent" || dealershipClass === "Franchise" || dealershipClass === "Group"
+        ? dealershipClass
+        : undefined,
+  };
+}
+
+/** Stable cache key for a filter scope — key order must not matter. */
+export function scopeCacheKey(scope: FilterScope): string {
+  return JSON.stringify([scope.country ?? DEFAULT_COUNTRY, scope.state ?? "", scope.city ?? "", scope.dealershipClass ?? ""]);
+}
+
+export function isDefaultScope(scope: FilterScope): boolean {
+  return !scope.state && !scope.city && !scope.dealershipClass && (!scope.country || scope.country === DEFAULT_COUNTRY);
+}
+
 export type AccountFilterInput = {
+  country?: string;
+  state?: string;
+  city?: string;
+  dealershipClass?: DealershipClass;
   ownerIds?: number[];
   unownedOnly?: boolean;
-  city?: string;
-  state?: string;
-  typeOfDealership?: string;
   searchTerm?: string;
   searchMatchedOwnerIds?: number[];
 };
@@ -53,11 +128,11 @@ export type AccountFilterInput = {
  * HubSpot semantics: filterGroups are OR'd together, filters within one group
  * are AND'd. Hard caps: 5 groups, 6 filters per group. Every AND condition that
  * must apply regardless of which OR branch matched (country + owner scope +
- * city/state/type) has to be duplicated into EVERY group — this is the exact
+ * state/city/class) has to be duplicated into EVERY group — this is the exact
  * mistake that produces wrong totals, so it's covered by scripts/check.ts.
  */
 export function buildFilterGroups(input: AccountFilterInput): FilterGroup[] {
-  const baseFilters: PropertyFilter[] = [COUNTRY_FILTER];
+  const baseFilters: PropertyFilter[] = [countryFilter(input.country)];
 
   if (input.unownedOnly) {
     baseFilters.push({ propertyName: "hubspot_owner_id", operator: "NOT_HAS_PROPERTY" });
@@ -65,16 +140,13 @@ export function buildFilterGroups(input: AccountFilterInput): FilterGroup[] {
     baseFilters.push({ propertyName: "hubspot_owner_id", operator: "IN", values: input.ownerIds.map(String) });
   }
 
-  if (input.city) baseFilters.push({ propertyName: "city", operator: "EQ", value: input.city });
-  if (input.state) baseFilters.push({ propertyName: "state", operator: "EQ", value: input.state });
-  if (input.typeOfDealership) {
-    baseFilters.push({ propertyName: "type_of_dealership", operator: "EQ", value: input.typeOfDealership });
-  }
+  if (input.state) baseFilters.push({ propertyName: STATE_PROPERTY, operator: "EQ", value: input.state });
+  if (input.city) baseFilters.push({ propertyName: "city", operator: "CONTAINS_TOKEN", value: input.city });
+  if (input.dealershipClass) baseFilters.push(...dealershipClassFilters(input.dealershipClass));
 
   // Free-text search: OR across name/domain/matched-owner, each branch still
-  // carrying every base (AND) filter. City/state are dedicated facet filters
-  // above, not search targets — typing a city into the search box won't match
-  // it; use the city facet instead.
+  // carrying every base (AND) filter. State/city/class are dedicated facet
+  // filters above, not search targets.
   if (input.searchTerm) {
     const branches: PropertyFilter[][] = [
       [{ propertyName: "name", operator: "CONTAINS_TOKEN", value: input.searchTerm }],

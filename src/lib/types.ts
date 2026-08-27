@@ -31,9 +31,19 @@ export type CompanyRecord = {
   team: string | null;
   role: string | null;
   typeOfDealership: string | null;
+  dealershipClass: "Independent" | "Franchise" | "Group" | null;
   gdId: string | null;
   gdName: string | null;
   inGroupDealership: boolean;
+  potentialRooftops: number | null;
+  lastActivityDate: string | null;
+};
+
+export type FilterScope = {
+  country?: string;
+  state?: string;
+  city?: string;
+  dealershipClass?: "Independent" | "Franchise" | "Group";
 };
 
 export type OwnerCountsResult = {
@@ -45,14 +55,13 @@ export type OwnerCountsResult = {
 
 export type OverviewResponse = {
   totalUsAccounts: number;
-  franchise: number;
+  /** Independent, and NOT in a group dealership (mutually exclusive with franchise/group). */
   independent: number;
+  /** Franchise, and NOT in a group dealership (mutually exclusive with independent/group). */
+  franchise: number;
+  /** In a group dealership, regardless of Independent/Franchise type (takes priority — see classifyDealership). */
   inGroupDealership: number;
-  notInGroupDealership: number;
-  groupFlagUnassigned: number;
-  uniqueGroupDealerships: number | null;
-  unownedUsAccounts: number;
-  countryUnassignedTotal: number;
+  salesOps: { accounts: number; owners: { ownerId: number; name: string }[] };
 };
 
 export type TeamTotal = {
@@ -77,17 +86,6 @@ export type MemberTotal = {
   accountCount: number;
   isMerged: boolean;
   note?: string;
-};
-
-export type AccountsQuery = {
-  page: number;
-  team?: string;
-  role?: string;
-  ownerId?: number;
-  city?: string;
-  state?: string;
-  country?: string;
-  q?: string;
 };
 
 export type AccountsResponse = {
@@ -126,8 +124,8 @@ export type ValidationReport = {
   systemBucketAccountCount: number;
   unownedCount: number;
   reconciliation: { pass: boolean; delta: number };
-  dealershipTypeReconciliation: { pass: boolean; franchise: number; independent: number; total: number };
-  countryUnassignedTotal: number;
+  /** independent + franchise + inGroupDealership === total, with no double counting. */
+  classificationReconciliation: { pass: boolean; independent: number; franchise: number; inGroupDealership: number; total: number };
   duplicateRecordIds: { count: 0; reason: string };
   paginationComplete: { explanation: string };
   totalsServerSide: { explanation: string };

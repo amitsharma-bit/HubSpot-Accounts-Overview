@@ -1,10 +1,10 @@
 "use client";
 
 import { useJson } from "@/lib/useJson";
+import { useScopeParams } from "@/lib/useScopeParams";
 import { TableSkeleton } from "./Skeletons";
+import { ROLE_ORDER } from "@/config/roster";
 import type { TeamsResponse } from "@/lib/types";
-
-const ROLE_ORDER = ["SDR", "AE", "SDR TL", "Manager", "Team Lead", "AM", "Other"];
 
 export function RoleDistribution({
   selectedRole,
@@ -13,7 +13,8 @@ export function RoleDistribution({
   selectedRole: string | null;
   onSelectRole: (role: string | null) => void;
 }) {
-  const { data, loading, error } = useJson<TeamsResponse>("/api/teams");
+  const scope = useScopeParams();
+  const { data, loading, error } = useJson<TeamsResponse>(`/api/teams?${scope.toString()}`);
 
   if (loading) return <TableSkeleton />;
   if (error || !data) return <div className="muted">Failed to load role distribution: {error}</div>;
@@ -30,12 +31,10 @@ export function RoleDistribution({
       {ROLE_ORDER.filter((r) => totals[r] !== undefined).map((role) => (
         <button
           key={role}
-          className={`card clickable${selectedRole === role ? " selected" : ""}`}
-          style={{ padding: "0.5rem 0.9rem" }}
+          className={`pill${selectedRole === role ? " selected" : ""}`}
           onClick={() => onSelectRole(selectedRole === role ? null : role)}
         >
-          <span style={{ fontWeight: 600 }}>{role}</span>{" "}
-          <span className="muted">{totals[role].toLocaleString()}</span>
+          {role} <span className="count">{totals[role].toLocaleString()}</span>
         </button>
       ))}
     </div>

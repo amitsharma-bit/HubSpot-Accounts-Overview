@@ -29,46 +29,54 @@ export function OverviewClient() {
   );
 
   return (
-    <div>
-      <h1>HubSpot US Accounts Overview</h1>
-      <p className="muted">Real-time overview of HubSpot accounts (United States only).</p>
+    <>
+      <div className="page-header">
+        <h1>HubSpot US Accounts Overview</h1>
+        <p>Real-time overview of HubSpot accounts (United States only) — every number computed server-side.</p>
+      </div>
 
-      <section>
+      <section className="section">
         <div className="section-title">Overview</div>
         <SummaryCards />
       </section>
 
-      <section>
+      <section className="section">
         <div className="section-title">Teams</div>
         <TeamCards selectedTeam={team} onSelectTeam={(t) => setParam({ team: t, ownerId: null })} />
       </section>
 
-      <section>
+      <section className="section">
         <div className="section-title">Role Distribution</div>
         <RoleDistribution selectedRole={role} onSelectRole={(r) => setParam({ role: r, ownerId: null })} />
       </section>
 
-      <section>
-        <div className="section-title">Team Members{team ? ` — ${team}` : ""}</div>
-        <MemberTable
-          team={team}
-          role={role}
-          selectedOwnerKey={ownerKey}
-          onSelectOwner={(key) => setParam({ ownerId: key })}
-        />
+      <section className="section">
+        <div className="section-title-row">
+          <div className="section-title">Team Members{team ? ` — ${team}` : ""}</div>
+        </div>
+        <div className="table-card">
+          <div className="table-scroll">
+            <MemberTable
+              team={team}
+              role={role}
+              selectedOwnerKey={ownerKey}
+              onSelectOwner={(key) => setParam({ ownerId: key })}
+            />
+          </div>
+        </div>
       </section>
 
-      <section>
+      <section className="section">
         <div className="section-title">Accounts</div>
         <AccountsTable
           team={team}
           role={role}
           ownerKey={ownerKey}
-          onClearTeam={() => setParam({ team: null, ownerId: null })}
-          onClearRole={() => setParam({ role: null })}
-          onClearOwner={() => setParam({ ownerId: null })}
+          onSelectTeam={(t) => setParam({ team: t, ownerId: null })}
+          onSelectRole={(r) => setParam({ role: r, ownerId: null })}
+          onSelectOwner={(key) => setParam({ ownerId: key })}
         />
       </section>
-    </div>
+    </>
   );
 }
