@@ -220,6 +220,14 @@ export function AccountsTable({
   const [openCompanyId, setOpenCompanyId] = useState<string | null>(null);
   const [openGdId, setOpenGdId] = useState<string | null>(null);
 
+  // Keep rendering the last-opened drawer's content while it's animating
+  // closed (openXId already went null) instead of unmounting it mid-slide —
+  // Drawer itself decides when to actually remove from the DOM.
+  const [lastCompanyId, setLastCompanyId] = useState<string | null>(null);
+  if (openCompanyId !== null && openCompanyId !== lastCompanyId) setLastCompanyId(openCompanyId);
+  const [lastGdId, setLastGdId] = useState<string | null>(null);
+  if (openGdId !== null && openGdId !== lastGdId) setLastGdId(openGdId);
+
   function renderCell(r: CompanyRecord, key: ColumnKey) {
     switch (key) {
       case "name":
@@ -402,8 +410,15 @@ export function AccountsTable({
         </>
       )}
 
-      {openCompanyId && <CompanyDetailDrawer companyId={openCompanyId} onClose={() => setOpenCompanyId(null)} onOpenGroup={setOpenGdId} />}
-      {openGdId && <GroupDetailDrawer gdId={openGdId} onClose={() => setOpenGdId(null)} />}
+      {lastCompanyId && (
+        <CompanyDetailDrawer
+          companyId={lastCompanyId}
+          open={openCompanyId !== null}
+          onClose={() => setOpenCompanyId(null)}
+          onOpenGroup={setOpenGdId}
+        />
+      )}
+      {lastGdId && <GroupDetailDrawer gdId={lastGdId} open={openGdId !== null} onClose={() => setOpenGdId(null)} />}
     </div>
   );
 }

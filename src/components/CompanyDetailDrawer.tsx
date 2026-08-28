@@ -9,17 +9,19 @@ import type { CompanyDetail } from "@/lib/types";
 
 export function CompanyDetailDrawer({
   companyId,
+  open,
   onClose,
   onOpenGroup,
 }: {
   companyId: string;
+  open: boolean;
   onClose: () => void;
   onOpenGroup: (gdId: string) => void;
 }) {
   const { data, loading, error } = useJson<CompanyDetail>(`/api/company/${companyId}`);
 
   return (
-    <Drawer open title={data?.name ?? "Company"} subtitle="Company details" onClose={onClose}>
+    <Drawer open={open} title={data?.name ?? "Company"} subtitle="Company details" onClose={onClose}>
       {loading && <div className="muted">Loading…</div>}
       {error && <div className="muted">Failed to load company: {error}</div>}
       {data && (

@@ -58,6 +58,14 @@ a {
   }
 }
 
+@media (prefers-reduced-transparency: reduce) {
+  .sidebar,
+  .last-refreshed {
+    background: var(--surface);
+    backdrop-filter: none;
+  }
+}
+
 /* ---------- App shell: sidebar + content ---------- */
 
 .shell {
@@ -68,7 +76,8 @@ a {
 .sidebar {
   width: 264px;
   flex: none;
-  background: var(--surface);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px) saturate(180%);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -256,7 +265,8 @@ a {
   right: 1.25rem;
   padding: 0.35rem 0.8rem;
   border-radius: 999px;
-  background: var(--surface);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
   font-size: 0.75rem;
@@ -323,11 +333,19 @@ a {
   animation: card-in 0.28s var(--ease) backwards;
 }
 
+/* Covers up to 10 cards in a row (Teams currently renders 6) — beyond that
+   the cascade just stops adding delay rather than reordering, so a future
+   team doesn't silently skip the animation the way a 5-card cap would. */
 .card-grid .card:nth-child(1) { animation-delay: 0.02s; }
 .card-grid .card:nth-child(2) { animation-delay: 0.05s; }
 .card-grid .card:nth-child(3) { animation-delay: 0.08s; }
 .card-grid .card:nth-child(4) { animation-delay: 0.11s; }
 .card-grid .card:nth-child(5) { animation-delay: 0.14s; }
+.card-grid .card:nth-child(6) { animation-delay: 0.17s; }
+.card-grid .card:nth-child(7) { animation-delay: 0.2s; }
+.card-grid .card:nth-child(8) { animation-delay: 0.23s; }
+.card-grid .card:nth-child(9) { animation-delay: 0.26s; }
+.card-grid .card:nth-child(10) { animation-delay: 0.29s; }
 
 @keyframes card-in {
   from {
@@ -455,11 +473,15 @@ a {
   font-weight: 600;
   color: var(--text);
   cursor: pointer;
-  transition: border-color 0.12s, background 0.12s;
+  transition: border-color 0.12s, background 0.12s, transform 0.1s var(--ease);
 }
 
 .pill:hover {
   border-color: var(--accent);
+}
+
+.pill:active {
+  transform: scale(0.96);
 }
 
 .pill.selected {
@@ -712,6 +734,29 @@ tr.row-selected {
   }
 }
 
+/* Exit mirrors the entry path (§7 spatial consistency) — see Drawer.tsx's
+   CLOSE_MS, which must match this animation-duration. */
+.drawer-overlay-out {
+  animation: overlay-out 0.18s var(--ease) forwards;
+}
+
+.drawer-out {
+  animation: drawer-out 0.22s var(--ease) forwards;
+}
+
+@keyframes overlay-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes drawer-out {
+  to {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+}
+
 .drawer-header {
   display: flex;
   align-items: flex-start;
@@ -865,6 +910,10 @@ tr.row-selected {
   border-color: var(--accent);
   transform: translateY(-2px);
   box-shadow: var(--shadow);
+}
+
+.member-card:active {
+  transform: translateY(0) scale(0.98);
 }
 
 .member-card.selected {

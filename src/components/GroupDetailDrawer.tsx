@@ -33,7 +33,15 @@ function Th({
   );
 }
 
-export function GroupDetailDrawer({ gdId, onClose }: { gdId: string; onClose: () => void }) {
+export function GroupDetailDrawer({
+  gdId,
+  open,
+  onClose,
+}: {
+  gdId: string;
+  open: boolean;
+  onClose: () => void;
+}) {
   const { data, loading, error } = useJson<GroupDetail>(`/api/group/${gdId}`);
   const [q, setQ] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("name");
@@ -62,7 +70,7 @@ export function GroupDetailDrawer({ gdId, onClose }: { gdId: string; onClose: ()
   }
 
   return (
-    <Drawer open title={data?.gdName ?? "Dealership Group"} subtitle="Group details" onClose={onClose}>
+    <Drawer open={open} title={data?.gdName ?? "Dealership Group"} subtitle="Group details" onClose={onClose}>
       {loading && <div className="muted">Loading…</div>}
       {error && <div className="muted">Failed to load group: {error}</div>}
       {data && (
