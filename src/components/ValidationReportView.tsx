@@ -8,7 +8,7 @@ function Row({ label, value, pass }: { label: string; value: string | number | b
   return (
     <tr>
       <td>{label}</td>
-      <td style={pass === undefined ? undefined : { color: pass ? "#10B981" : "#EF4444", fontWeight: 700 }}>
+      <td style={pass === undefined ? undefined : { color: pass ? "var(--accent-2)" : "var(--color-error)", fontWeight: 700 }}>
         {String(value)}
       </td>
     </tr>

@@ -111,8 +111,8 @@ export function AssignmentForm({
         </div>
       </div>
 
-      {error && <p className="muted" style={{ color: "#EF4444", marginTop: "0.5rem" }}>{error}</p>}
-      {savedMessage && !error && <p className="muted" style={{ color: "#10B981", marginTop: "0.5rem" }}>{savedMessage}</p>}
+      {error && <p className="muted" style={{ color: "var(--color-error)", marginTop: "0.5rem" }}>{error}</p>}
+      {savedMessage && !error && <p className="muted" style={{ color: "var(--accent-2)", marginTop: "0.5rem" }}>{savedMessage}</p>}
     </form>
   );
 }

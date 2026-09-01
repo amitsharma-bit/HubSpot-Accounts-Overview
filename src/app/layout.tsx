@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
-import { Geist, Geist_Mono } from "next/font/google";
-import { NavLink } from "@/components/SideNav";
-import { FilterPanel } from "@/components/FilterPanel";
-import { LastRefreshed } from "@/components/LastRefreshed";
+import { Inter, Geist_Mono } from "next/font/google";
+import Script from "next/script";
+import { Sidebar } from "@/components/Sidebar";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
@@ -21,29 +19,26 @@ export const metadata: Metadata = {
   description: "US account ownership and team distribution, computed server-side from HubSpot.",
 };
 
+// Runs before hydration so the correct theme (explicit choice, else OS
+// preference) is on the root element before first paint — otherwise a
+// dark-mode visitor sees a flash of the light theme every load.
+const THEME_INIT_SCRIPT = `
+try {
+  var saved = window.localStorage.getItem('hs-dashboard-theme');
+  if (saved === 'dark' || saved === 'light') document.documentElement.dataset.theme = saved;
+} catch (e) {}
+`;
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="en" className={`${inter.variable} ${geistMono.variable}`}>
       <body>
+        <Script id="theme-init" strategy="beforeInteractive">
+          {THEME_INIT_SCRIPT}
+        </Script>
         <div className="shell">
-          <aside className="sidebar">
-            <div className="brand">
-              <span className="brand-mark">HS</span>
-              <span className="brand-text">
-                US Accounts
-                <span>Overview</span>
-              </span>
-            </div>
-            <nav className="sidenav">
-              <NavLink href="/" label="Overview" icon="grid" />
-              <Suspense fallback={null}>
-                <FilterPanel />
-              </Suspense>
-              <NavLink href="/control-center" label="Control Center" icon="shield" />
-            </nav>
-          </aside>
+          <Sidebar />
           <main className="content">{children}</main>
-          <LastRefreshed />
         </div>
       </body>
     </html>

@@ -6,7 +6,7 @@ import { CardGridSkeleton } from "./Skeletons";
 import { IconBadge } from "./Icon";
 import type { TeamsResponse } from "@/lib/types";
 
-const TEAM_COLORS = ["#4F46E5", "#10B981", "#8B5CF6", "#F59E0B", "#6B7280"];
+const TEAM_COLORS = ["var(--accent)", "var(--color-purple)", "var(--color-orange)", "var(--color-teal)", "var(--color-slate)"];
 
 export function TeamCards({
   selectedTeam,
@@ -24,6 +24,10 @@ export function TeamCards({
   const visibleTeams = data.teams.filter((t) => t.memberCount > 0);
   if (visibleTeams.length === 0) return <div className="muted">No team members own an account in the current filter.</div>;
 
+  // "Top Performing" is derived from the real, currently-filtered totals —
+  // whichever team has the most accounts right now — never a fixed/fabricated label.
+  const topTeam = visibleTeams.length > 1 ? visibleTeams.reduce((a, b) => (b.accountCount > a.accountCount ? b : a)) : null;
+
   return (
     <div className="card-grid">
       {visibleTeams.map((t, i) => {
@@ -37,7 +41,10 @@ export function TeamCards({
           >
             <div className="card-top">
               <div>
-                <div className="label">{t.team}</div>
+                <div className="label" style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
+                  {t.team}
+                  {topTeam === t && <span className="top-badge">Top Performing</span>}
+                </div>
                 <div className="value">{t.accountCount.toLocaleString()}</div>
                 <div className="sub">Accounts in the current filter</div>
               </div>

@@ -1,8 +1,8 @@
 import { countCompanies, getCompanyProperties } from "./hubspot";
-import { COUNTRY_PROPERTY, STATE_PROPERTY, countryFilter, DEFAULT_COUNTRY } from "./filters";
+import { COUNTRY_PROPERTY, STATE_PROPERTY, countryFilter, dealershipClassFilters, DEFAULT_COUNTRY } from "./filters";
 import { cached } from "./cache";
 import { getJSON, setJSON } from "./redis";
-import type { PropertyFilter } from "./types";
+import type { PropertyFilter, FilterScope } from "./types";
 
 export type FilterOption = { value: string; count: number };
 
@@ -59,5 +59,40 @@ export async function getStateOptions(country: string = DEFAULT_COUNTRY): Promis
     const prop = props.find((p) => p.name === STATE_PROPERTY);
     if (!prop) return [];
     return countOptions(STATE_PROPERTY, prop.options.map((o) => o.value), countryFilter(country));
+  });
+}
+
+/**
+ * Real per-state account counts under the full active sidebar scope
+ * (country + city + dealershipClass — state itself excluded, since that's
+ * the breakdown axis). When neither city nor dealershipClass is set this is
+ * identical to getStateOptions' 7-day-cached result, so that's reused
+ * directly rather than re-querying; a narrower scope isn't worth persisting
+ * to Redis (too many possible combinations), so it's just the normal
+ * 30-minute in-memory cache in that case.
+ */
+export async function getStateBreakdown(scope: FilterScope): Promise<FilterOption[]> {
+  if (!scope.city && !scope.dealershipClass) return getStateOptions(scope.country);
+
+  return cached(`filter-options:mem:state-breakdown:${scope.country}:${scope.city ?? ""}:${scope.dealershipClass ?? ""}`, 30 * 60 * 1000, async () => {
+    const props = await getCompanyProperties();
+    const prop = props.find((p) => p.name === STATE_PROPERTY);
+    if (!prop) return [];
+    const filters: PropertyFilter[] = [countryFilter(scope.country)];
+    if (scope.city) filters.push({ propertyName: "city", operator: "CONTAINS_TOKEN", value: scope.city });
+    if (scope.dealershipClass) filters.push(...dealershipClassFilters(scope.dealershipClass));
+
+    const results: FilterOption[] = [];
+    const options = prop.options.map((o) => o.value);
+    let cursor = 0;
+    async function worker() {
+      while (cursor < options.length) {
+        const value = options[cursor++];
+        const count = await countCompanies([{ filters: [...filters, { propertyName: STATE_PROPERTY, operator: "EQ", value }] }]);
+        if (count > 0) results.push({ value, count });
+      }
+    }
+    await Promise.all(Array.from({ length: CONCURRENCY }, worker));
+    return results.sort((a, b) => b.count - a.count);
   });
 }

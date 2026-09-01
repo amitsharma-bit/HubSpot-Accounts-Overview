@@ -58,6 +58,13 @@ const SERVER_SORTABLE: ReadonlySet<ColumnKey> = new Set([
   "lastActivityDate",
 ]);
 
+type TabKey = "all" | "top" | "recent";
+const TABS: { key: TabKey; label: string; sortBy: ColumnKey | null; sortDir: "asc" | "desc" }[] = [
+  { key: "all", label: "All Accounts", sortBy: null, sortDir: "asc" },
+  { key: "top", label: "Top Opportunities", sortBy: "potentialRooftops", sortDir: "desc" },
+  { key: "recent", label: "Recent Activity", sortBy: "lastActivityDate", sortDir: "desc" },
+];
+
 const COLUMN_PREFS_KEY = "accounts-table-columns-v1";
 
 function loadColumnPrefs(): { order: ColumnKey[]; hidden: ColumnKey[] } {
@@ -119,6 +126,16 @@ export function AccountsTable({
       setSortBy(key);
       setSortDir("asc");
     }
+  }
+
+  // Tabs are presets over the same real sort state used by column-header
+  // clicks — "Top Opportunities" sorts by potential rooftops, "Recent
+  // Activity" by last activity date. Manually sorting a column just means no
+  // tab is highlighted, rather than the tabs tracking separate fake state.
+  const activeTab = TABS.find((t) => t.sortBy === sortBy && (t.sortBy === null || t.sortDir === sortDir))?.key ?? null;
+  function selectTab(tab: (typeof TABS)[number]) {
+    setSortBy(tab.sortBy);
+    setSortDir(tab.sortDir);
   }
 
   // Column order / visibility, persisted locally per browser.
@@ -275,44 +292,17 @@ export function AccountsTable({
   return (
     <div className="table-card">
       <div style={{ padding: "0.9rem", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-        <div className="filter-bar" style={{ justifyContent: "space-between" }}>
-          <div className="filter-bar">
-            <label className="search-box-compact">
-              <Icon name="search" size={14} />
-              <input
-                type="search"
-                placeholder="Search company, domain, GD…"
-                value={qInput}
-                onChange={(e) => setQInput(e.target.value)}
-              />
-            </label>
-            <select value={role ?? ""} onChange={(e) => onSelectRole(e.target.value || null)}>
-              <option value="">All Roles</option>
-              {ROLE_ORDER.map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
-            </select>
-            <select value={team ?? ""} onChange={(e) => onSelectTeam(e.target.value || null)}>
-              <option value="">All Teams</option>
-              {(rosterData?.pods ?? []).map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-            <select value={ownerKey ?? ""} onChange={(e) => onSelectOwner(e.target.value || null)}>
-              <option value="">All Members</option>
-              {(memberData?.members ?? []).map((m) => (
-                <option key={m.ownerIds.join(",")} value={m.ownerIds.join(",")}>
-                  {m.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="columns-menu-wrap">
+        <div className="tabs-row">
+          {TABS.map((tab) => (
+            <button
+              key={tab.key}
+              className={`tab-btn${activeTab === tab.key ? " active" : ""}`}
+              onClick={() => selectTab(tab)}
+            >
+              {tab.label}
+            </button>
+          ))}
+          <div className="columns-menu-wrap" style={{ marginLeft: "auto" }}>
             <button className="btn btn-secondary" onClick={() => setColumnsMenuOpen((v) => !v)}>
               <Icon name="columns" size={15} /> Manage Columns
             </button>
@@ -325,6 +315,42 @@ export function AccountsTable({
               />
             )}
           </div>
+        </div>
+
+        <div className="filter-bar">
+          <label className="search-box-compact">
+            <Icon name="search" size={14} />
+            <input
+              type="search"
+              placeholder="Search company, domain, GD…"
+              value={qInput}
+              onChange={(e) => setQInput(e.target.value)}
+            />
+          </label>
+          <select value={role ?? ""} onChange={(e) => onSelectRole(e.target.value || null)}>
+            <option value="">All Roles</option>
+            {ROLE_ORDER.map((r) => (
+              <option key={r} value={r}>
+                {r}
+              </option>
+            ))}
+          </select>
+          <select value={team ?? ""} onChange={(e) => onSelectTeam(e.target.value || null)}>
+            <option value="">All Teams</option>
+            {(rosterData?.pods ?? []).map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+          <select value={ownerKey ?? ""} onChange={(e) => onSelectOwner(e.target.value || null)}>
+            <option value="">All Members</option>
+            {(memberData?.members ?? []).map((m) => (
+              <option key={m.ownerIds.join(",")} value={m.ownerIds.join(",")}>
+                {m.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="filter-bar">

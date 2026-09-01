@@ -30,7 +30,7 @@ export function UnmappedTable() {
                 <div className="value">{b.count.toLocaleString()}</div>
                 <div className="sub">bulk-import bucket, not a rep — owner ID {b.ownerId}</div>
               </div>
-              <IconBadge name="layers" color="#9CA3AF" />
+              <IconBadge name="layers" color="var(--color-slate)" />
             </div>
           </div>
         ))}
@@ -40,7 +40,7 @@ export function UnmappedTable() {
               <div className="label">No Owner At All</div>
               <div className="value">{data.unowned.count.toLocaleString()}</div>
             </div>
-            <IconBadge name="userX" color="#9CA3AF" />
+            <IconBadge name="userX" color="var(--color-slate)" />
           </div>
         </div>
       </div>

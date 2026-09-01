@@ -1,17 +1,76 @@
 :root {
-  --bg: #f6f7fb;
+  --bg: #f5f6f7;
   --surface: #ffffff;
-  --border: #e6e8f0;
-  --text: #171923;
-  --muted: #6b7280;
-  --muted-2: #9aa1b1;
-  --accent: #4f46e5;
-  --accent-2: #7c5cfc;
-  --accent-soft: #eef0ff;
+  --border: #e6e8eb;
+  --border-strong: #d6d9de;
+  --text: #1b2330;
+  --muted: #61708a;
+  --muted-2: #8b98ac;
+  --accent: #0b6e3f;
+  --accent-2: #12a05c;
+  --accent-soft: #e9f6ee;
+  --accent-light: #4fc98d;
+  --color-orange: #f0873f;
+  --color-purple: #9b7ff0;
+  --color-teal: #2bb6a3;
+  --color-slate: #7c8ba5;
+  --color-ink: #20303f;
+  --color-error: #dc3545;
   --radius: 18px;
   --radius-sm: 10px;
-  --shadow: 0 1px 2px rgba(23, 25, 35, 0.04), 0 8px 24px -12px rgba(23, 25, 35, 0.08);
+  --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 6px 18px -12px rgba(16, 24, 40, 0.12);
+  --shadow-pop: 0 10px 28px -8px rgba(16, 24, 40, 0.2);
   --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* Dark tokens apply either from the OS preference (unless the user picked
+   Light explicitly) or from an explicit user choice persisted by ThemeToggle
+   — see layout.tsx's beforeInteractive script, which sets data-theme before
+   first paint to avoid a flash of the wrong theme. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #161826;
+    --surface: #1d2032;
+    --border: rgba(233, 233, 237, 0.1);
+    --border-strong: rgba(233, 233, 237, 0.2);
+    --text: #e9e9ed;
+    --muted: #a3a5b8;
+    --muted-2: #7a7d93;
+    --accent: #2aa968;
+    --accent-2: #37c97f;
+    --accent-soft: rgba(55, 201, 127, 0.14);
+    --accent-light: #6fe0ac;
+    --color-orange: #f2a05f;
+    --color-purple: #9184d9;
+    --color-teal: #4fcfbc;
+    --color-slate: #8e9ab4;
+    --color-ink: #c9ceda;
+    --color-error: #f87171;
+    --shadow: 0 1px 0 rgba(233, 233, 237, 0.04), 0 10px 28px -14px rgba(0, 0, 0, 0.7);
+    --shadow-pop: 0 14px 34px -10px rgba(0, 0, 0, 0.75);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #161826;
+  --surface: #1d2032;
+  --border: rgba(233, 233, 237, 0.1);
+  --border-strong: rgba(233, 233, 237, 0.2);
+  --text: #e9e9ed;
+  --muted: #a3a5b8;
+  --muted-2: #7a7d93;
+  --accent: #2aa968;
+  --accent-2: #37c97f;
+  --accent-soft: rgba(55, 201, 127, 0.14);
+  --accent-light: #6fe0ac;
+  --color-orange: #f2a05f;
+  --color-purple: #9184d9;
+  --color-teal: #4fcfbc;
+  --color-slate: #8e9ab4;
+  --color-ink: #c9ceda;
+  --color-error: #f87171;
+  --shadow: 0 1px 0 rgba(233, 233, 237, 0.04), 0 10px 28px -14px rgba(0, 0, 0, 0.7);
+  --shadow-pop: 0 14px 34px -10px rgba(0, 0, 0, 0.75);
 }
 
 * {
@@ -34,10 +93,11 @@ body {
   min-height: 100%;
   color: var(--text);
   background: var(--bg);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--font-geist-sans), "Segoe UI", sans-serif;
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
   letter-spacing: -0.006em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background 200ms ease, color 200ms ease;
 }
 
 a {
@@ -59,8 +119,7 @@ a {
 }
 
 @media (prefers-reduced-transparency: reduce) {
-  .sidebar,
-  .last-refreshed {
+  .sidebar {
     background: var(--surface);
     backdrop-filter: none;
   }
@@ -87,6 +146,88 @@ a {
   top: 0;
   height: 100vh;
   overflow-y: auto;
+  overflow-x: hidden;
+  transition: width 220ms var(--ease), background 200ms ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .sidebar {
+    background: rgba(29, 32, 50, 0.72);
+  }
+}
+:root[data-theme="dark"] .sidebar {
+  background: rgba(29, 32, 50, 0.72);
+}
+
+.sidebar.collapsed {
+  width: 72px;
+  padding-left: 0.6rem;
+  padding-right: 0.6rem;
+}
+
+.collapse-btn {
+  align-self: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.15s var(--ease), color 0.15s var(--ease);
+}
+
+.collapse-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+}
+
+.crm-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.65rem 0.7rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.crm-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-2);
+  flex: none;
+  margin-top: 4px;
+}
+
+.crm-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.crm-status {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--accent-2);
+}
+
+.crm-sync {
+  font-size: 0.66rem;
+  color: var(--muted-2);
+  margin-top: 0.1rem;
 }
 
 .brand {
@@ -138,7 +279,13 @@ a {
   font-size: 0.88rem;
   font-weight: 600;
   color: var(--muted);
+  white-space: nowrap;
   transition: background 0.15s var(--ease), color 0.15s var(--ease);
+}
+
+.sidebar.collapsed .nav-link {
+  justify-content: center;
+  padding: 0.55rem;
 }
 
 .nav-link:hover {
@@ -259,28 +406,12 @@ a {
   gap: 1.75rem;
 }
 
-.last-refreshed {
-  position: fixed;
-  top: 0.85rem;
-  right: 1.25rem;
-  padding: 0.35rem 0.8rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--muted);
-  z-index: 10;
-}
-
-@media (max-width: 860px) {
-  .last-refreshed {
-    position: static;
-    align-self: flex-end;
-    margin: 0 0 -0.5rem;
-  }
+.page-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .page-header h1 {
@@ -293,6 +424,125 @@ a {
   color: var(--muted);
   font-size: 0.9rem;
   margin-top: 0.15rem;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.refreshed-text {
+  text-align: right;
+}
+
+.refreshed-label {
+  font-size: 0.68rem;
+  color: var(--muted-2);
+}
+
+.refreshed-value {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-2);
+  animation: livePulse 1.8s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.icon-btn-round {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s var(--ease), border-color 0.15s var(--ease), transform 0.1s var(--ease);
+}
+
+.icon-btn-round:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.icon-btn-round:active {
+  transform: scale(0.94);
+}
+
+.theme-toggle {
+  width: 42px;
+  height: 24px;
+  border-radius: 999px;
+  border: none;
+  padding: 0;
+  position: relative;
+  cursor: pointer;
+  background: var(--border);
+  transition: background 200ms var(--ease);
+  flex: none;
+}
+
+:root[data-theme="dark"] .theme-toggle {
+  background: var(--accent);
+}
+
+.theme-toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: left 200ms var(--ease);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+:root[data-theme="dark"] .theme-toggle-thumb {
+  left: 21px;
+  color: var(--accent-light);
+}
+
+@media (max-width: 860px) {
+  .header-right {
+    align-self: flex-end;
+  }
 }
 
 @media (max-width: 860px) {
@@ -1051,4 +1301,235 @@ th.sort-active .sort-indicator {
   border-top: 1px solid var(--border);
   margin-top: 0.3rem;
   padding-top: 0.4rem;
+}
+
+/* ---------- Panels (Role Distribution, state list, etc.) ---------- */
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.panel-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.panel-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.panel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.top-badge {
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* ---------- Sparklines (KPI cards) ---------- */
+
+.spark-wrap {
+  margin-top: auto;
+}
+
+.spark-delta {
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-top: 0.15rem;
+}
+
+.spark-delta.up {
+  color: var(--accent-2);
+}
+
+.spark-delta.muted {
+  color: var(--muted-2);
+  font-weight: 500;
+}
+
+/* ---------- Role Distribution donut ---------- */
+
+.donut-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.donut-holder {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  flex: none;
+}
+
+.donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  text-align: center;
+}
+
+.donut-big {
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.donut-small {
+  font-size: 0.66rem;
+  color: var(--muted);
+  margin-top: 0.1rem;
+}
+
+.legend-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.4rem;
+  border-radius: 8px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  width: 100%;
+  transition: background 0.12s var(--ease);
+}
+
+.legend-row:hover {
+  background: var(--bg);
+}
+
+.legend-row.selected {
+  background: var(--accent-soft);
+}
+
+.legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.legend-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+}
+
+.legend-count {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+/* ---------- Ranked per-state list (replaces a choropleth we have no real
+   geographic dataset for — same real per-state counts, listed instead) ---------- */
+
+.state-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.state-row {
+  display: grid;
+  grid-template-columns: 90px 1fr 60px;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.78rem;
+}
+
+.state-row-name {
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.state-row-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.state-row-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent-light), var(--accent));
+}
+
+.state-row-count {
+  font-weight: 700;
+  color: var(--muted);
+  text-align: right;
+}
+
+/* ---------- Accounts table tabs ---------- */
+
+.tabs-row {
+  display: flex;
+  gap: 1.25rem;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.tab-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0.7rem 0.1rem;
+  font-size: 0.82rem;
+  font-family: inherit;
+  font-weight: 700;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.12s var(--ease), border-color 0.12s var(--ease);
+}
+
+.tab-btn:hover {
+  color: var(--text);
+}
+
+.tab-btn.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
 }

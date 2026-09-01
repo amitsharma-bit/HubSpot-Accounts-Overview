@@ -15,6 +15,11 @@ const PATHS: Record<string, string> = {
   chevronsUpDown: "M7 7l3-3 3 3M7 13l3 3 3-3",
   columns: "M4 3h12a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm4 0v14m5-14v14",
   dragHandle: "M7 5h.01M7 10h.01M7 15h.01M13 5h.01M13 10h.01M13 15h.01",
+  sun: "M10 6a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM10 1v2M10 17v2M2 10h2M16 10h2M4.2 4.2l1.4 1.4M14.4 14.4l1.4 1.4M15.8 4.2l-1.4 1.4M5.6 14.4l-1.4 1.4",
+  moon: "M15.5 11.8A6.2 6.2 0 0 1 8.2 4.5a6.2 6.2 0 1 0 7.3 7.3Z",
+  refresh: "M16.5 10a6.5 6.5 0 1 1-2.1-4.8M16.5 3.5v4h-4",
+  chevronLeft: "M12 5l-5 5 5 5",
+  chevronRight: "M8 5l5 5-5 5",
 };
 
 export function Icon({ name, size = 18 }: { name: keyof typeof PATHS; size?: number }) {
@@ -27,7 +32,7 @@ export function Icon({ name, size = 18 }: { name: keyof typeof PATHS; size?: num
 
 export function IconBadge({ name, color }: { name: keyof typeof PATHS; color: string }) {
   return (
-    <span className="icon-badge" style={{ background: `${color}1a`, color }}>
+    <span className="icon-badge" style={{ background: `color-mix(in srgb, ${color} 16%, transparent)`, color }}>
       <Icon name={name} size={18} />
     </span>
   );

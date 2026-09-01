@@ -62,6 +62,15 @@ export type OverviewResponse = {
   /** In a group dealership, regardless of Independent/Franchise type (takes priority — see classifyDealership). */
   inGroupDealership: number;
   salesOps: { accounts: number; owners: { ownerId: number; name: string }[] };
+  /**
+   * Daily snapshots recorded by the hourly refresh job, oldest first —
+   * present only for the default scope (Country=United States, no other
+   * filters), and only once at least one daily snapshot exists. Absent (not
+   * an empty array) means "history collection hasn't produced a point yet",
+   * which the UI shows as "Not enough history yet" rather than a flat/fake
+   * sparkline.
+   */
+  history?: { date: string; totalUsAccounts: number; independent: number; franchise: number; inGroupDealership: number; salesOpsAccounts: number }[];
 };
 
 export type TeamTotal = {

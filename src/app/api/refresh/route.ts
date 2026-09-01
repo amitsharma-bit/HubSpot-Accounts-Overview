@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getOwnerCounts } from "@/lib/ownerCounts";
+import { computeOverview } from "@/lib/overview";
+import { recordDailySnapshotIfNeeded } from "@/lib/history";
 
 // Vercel Hobby's Cron only allows daily schedules, not hourly (verified
 // against Vercel's own docs) — the actual hourly trigger is a GitHub Actions
@@ -18,5 +20,10 @@ export async function POST(req: NextRequest) {
   }
 
   const result = await getOwnerCounts({}, true);
+  const overview = await computeOverview({});
+  // Best-effort — a history-write failure shouldn't fail the refresh itself,
+  // since the live snapshot (what every page actually reads) already succeeded.
+  await recordDailySnapshotIfNeeded(overview, result).catch((err) => console.error("[history]", err));
+
   return NextResponse.json({ ok: true, computedAt: result.computedAt, total: result.total });
 }

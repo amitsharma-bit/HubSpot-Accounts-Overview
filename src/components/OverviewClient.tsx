@@ -2,9 +2,11 @@
 
 import { useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { PageHeader } from "./PageHeader";
 import { SummaryCards } from "./SummaryCards";
 import { TeamCards } from "./TeamCards";
 import { RoleDistribution } from "./RoleDistribution";
+import { StateBreakdown } from "./StateBreakdown";
 import { MemberTable } from "./MemberTable";
 import { AccountsTable } from "./AccountsTable";
 
@@ -30,10 +32,10 @@ export function OverviewClient() {
 
   return (
     <>
-      <div className="page-header">
-        <h1>HubSpot US Accounts Overview</h1>
-        <p>Real-time overview of HubSpot accounts (United States only) — every number computed server-side.</p>
-      </div>
+      <PageHeader
+        title="HubSpot US Accounts Overview"
+        subtitle="Real-time overview of HubSpot accounts (United States only) — every number computed server-side."
+      />
 
       <section className="section">
         <div className="section-title">Overview</div>
@@ -46,8 +48,10 @@ export function OverviewClient() {
       </section>
 
       <section className="section">
-        <div className="section-title">Role Distribution</div>
-        <RoleDistribution team={team} selectedRole={role} onSelectRole={(r) => setParam({ role: r, ownerId: null })} />
+        <div className="panel-grid">
+          <RoleDistribution team={team} selectedRole={role} onSelectRole={(r) => setParam({ role: r, ownerId: null })} />
+          <StateBreakdown />
+        </div>
       </section>
 
       <section className="section">
