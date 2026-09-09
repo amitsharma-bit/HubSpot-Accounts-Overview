@@ -16,7 +16,7 @@ const IST_FORMATTER = new Intl.DateTimeFormat("en-IN", {
   hour12: true,
 });
 
-function NavLink({ href, label, icon }: { href: string; label: string; icon: "grid" | "shield" }) {
+function NavLink({ href, label, icon }: { href: string; label: string; icon: "grid" | "shield" | "columns" }) {
   const pathname = usePathname();
   return (
     <Link href={href} className={`nav-link${pathname === href ? " active" : ""}`} title={label}>
@@ -86,6 +86,7 @@ export function Sidebar() {
             <FilterPanel />
           </Suspense>
         )}
+        <NavLink href="/data-assignment" label="Data Assignment" icon="columns" />
         <NavLink href="/control-center" label="Control Center" icon="shield" />
       </nav>
 

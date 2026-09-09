@@ -180,6 +180,88 @@ export async function getCompanyProperties(): Promise<HubspotProperty[]> {
   }));
 }
 
+/**
+ * Generic, object-type-parameterized variants of the Company-only helpers
+ * above — added for the Data Assignment module (src/lib/assignment/*), which
+ * needs to read the real p242626590_dealship_group_names custom object.
+ * Deliberately additive: nothing above this line changed, so Overview/
+ * Control Center's behavior is untouched. Reuses the same rate gate, retry,
+ * and error handling as every other call in this file — no second client.
+ */
+
+export async function searchObjects(objectType: string, body: SearchBody): Promise<SearchResult> {
+  const res = await hubspotFetch(`/crm/v3/objects/${encodeURIComponent(objectType)}/search`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+  return res.json();
+}
+
+export async function getObjectById(
+  objectType: string,
+  id: string,
+  properties: string[]
+): Promise<{ id: string; properties: Record<string, string | null> } | null> {
+  const qs = new URLSearchParams({ properties: properties.join(",") });
+  try {
+    const res = await hubspotFetch(`/crm/v3/objects/${encodeURIComponent(objectType)}/${encodeURIComponent(id)}?${qs.toString()}`, {
+      method: "GET",
+    });
+    return res.json();
+  } catch (err) {
+    if (err instanceof HubspotHttpError && err.status === 404) return null;
+    throw err;
+  }
+}
+
+export async function batchReadObjects(
+  objectType: string,
+  ids: string[],
+  properties: string[]
+): Promise<{ id: string; properties: Record<string, string | null> }[]> {
+  if (ids.length === 0) return [];
+  const results: { id: string; properties: Record<string, string | null> }[] = [];
+  // HubSpot's batch/read caps at 100 inputs per call.
+  for (let i = 0; i < ids.length; i += 100) {
+    const chunk = ids.slice(i, i + 100);
+    const res = await hubspotFetch(`/crm/v3/objects/${encodeURIComponent(objectType)}/batch/read`, {
+      method: "POST",
+      body: JSON.stringify({ properties, inputs: chunk.map((id) => ({ id })) }),
+    });
+    const json = await res.json();
+    results.push(...(json.results ?? []));
+  }
+  return results;
+}
+
+/**
+ * Batch-reads the association between many "from" objects and one "to"
+ * object type in as few calls as possible (Phase 42 — no one-request-per-row
+ * fan-out). HubSpot's v4 batch associations endpoint caps at 100 "from" IDs
+ * per call.
+ */
+export async function batchGetAssociations(
+  fromObjectType: string,
+  fromIds: string[],
+  toObjectType: string
+): Promise<Map<string, string[]>> {
+  const out = new Map<string, string[]>();
+  for (let i = 0; i < fromIds.length; i += 100) {
+    const chunk = fromIds.slice(i, i + 100);
+    const res = await hubspotFetch(
+      `/crm/v4/associations/${encodeURIComponent(fromObjectType)}/${encodeURIComponent(toObjectType)}/batch/read`,
+      { method: "POST", body: JSON.stringify({ inputs: chunk.map((id) => ({ id })) }) }
+    );
+    const json = await res.json();
+    for (const entry of json.results ?? []) {
+      const fromId = String(entry.from?.id ?? "");
+      const toIds = (entry.to ?? []).map((t: { toObjectId: string | number }) => String(t.toObjectId));
+      if (fromId) out.set(fromId, toIds);
+    }
+  }
+  return out;
+}
+
 export type HubspotOwner = { ownerId: number; name: string; email: string | null; archived: boolean };
 
 export async function listOwners(): Promise<HubspotOwner[]> {
