@@ -20,6 +20,7 @@ const PATHS: Record<string, string> = {
   refresh: "M16.5 10a6.5 6.5 0 1 1-2.1-4.8M16.5 3.5v4h-4",
   chevronLeft: "M12 5l-5 5 5 5",
   chevronRight: "M8 5l5 5-5 5",
+  report: "M6 2h6l3 3v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Zm5 0v3h3M7 10h6M7 13h6M7 16h4",
 };
 
 export function Icon({ name, size = 18 }: { name: keyof typeof PATHS; size?: number }) {

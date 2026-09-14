@@ -6,7 +6,15 @@ export type FilterOperator =
   | "HAS_PROPERTY"
   | "NOT_HAS_PROPERTY"
   | "CONTAINS_TOKEN"
-  | "GT";
+  | "GT"
+  // Added for the Data Reports filter builder (src/lib/dataReports) — real,
+  // documented HubSpot search operators that nothing before this needed.
+  // Purely additive: widens what callers are allowed to pass, doesn't
+  // change any existing call site's behavior.
+  | "NOT_CONTAINS_TOKEN"
+  | "LT"
+  | "GTE"
+  | "LTE";
 
 export type PropertyFilter = {
   propertyName: string;
