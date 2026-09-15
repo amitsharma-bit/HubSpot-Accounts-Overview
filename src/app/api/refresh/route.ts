@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOwnerCounts } from "@/lib/ownerCounts";
-import { computeOverview } from "@/lib/overview";
-import { recordDailySnapshotIfNeeded } from "@/lib/history";
+import { performForcedRefresh } from "@/lib/forceRefresh";
 
 // Vercel Hobby's Cron only allows daily schedules, not hourly (verified
 // against Vercel's own docs) — the actual hourly trigger is a GitHub Actions
 // workflow (.github/workflows/hourly-refresh.yml) hitting this route, not
 // Vercel Cron. Protected by a shared secret so it can't be hit publicly to
-// burn ~380 HubSpot API calls on demand.
+// burn ~380 HubSpot API calls on demand. The dashboard's own "Refresh" button
+// hits the separate, cooldown-protected /api/refresh-now instead — it can't
+// use this secret (it isn't safe to ship to the browser).
 export const maxDuration = 290;
 
 export async function POST(req: NextRequest) {
@@ -19,11 +19,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const result = await getOwnerCounts({}, true);
-  const overview = await computeOverview({});
-  // Best-effort — a history-write failure shouldn't fail the refresh itself,
-  // since the live snapshot (what every page actually reads) already succeeded.
-  await recordDailySnapshotIfNeeded(overview, result).catch((err) => console.error("[history]", err));
-
-  return NextResponse.json({ ok: true, computedAt: result.computedAt, total: result.total });
+  const result = await performForcedRefresh();
+  return NextResponse.json({ ok: true, ...result });
 }

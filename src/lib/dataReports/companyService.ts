@@ -7,6 +7,25 @@ import type { ReportDefinition, ReportRow, ReportOwnerOption } from "./types";
 import type { FilterGroup, PropertyFilter } from "../types";
 
 /**
+ * These three date columns display as "DD-Month-Year" (e.g. "14-July-2026")
+ * rather than the raw HubSpot ISO timestamp — requested specifically for
+ * these three, not every datetime column, so "Create Date" etc. are left
+ * as-is unless asked. HubSpot's own value is UTC; this renders the UTC
+ * calendar date rather than shifting it to a viewer's local timezone, since
+ * a report cell shouldn't silently change date depending on who's viewing it.
+ */
+const DATE_DISPLAY_COLUMNS = new Set(["Owner assigned date", "Last Activity Date", "Rooftop Last Activity"]);
+
+export function formatReportDate(iso: string | null): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso; // malformed value — show it as-is rather than hiding it
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  const month = d.toLocaleString("en-US", { month: "long", timeZone: "UTC" });
+  return `${day}-${month}-${d.getUTCFullYear()}`;
+}
+
+/**
  * Translates a ReportDefinition's owner selection + property-kind filters
  * into real HubSpot search filters — a single AND group (HubSpot's cap: 6
  * filters per group), exactly what this feature's "keep filters simple, no
@@ -105,7 +124,13 @@ function mapRow(
         row[label] = ownerId !== null ? ownerTeams.get(ownerId) ?? null : null;
       } else {
         const v = raw.properties[def.internalName];
-        row[label] = def.type === "number" && v !== null && v !== undefined && v !== "" ? Number(v) : v;
+        if (def.type === "number" && v !== null && v !== undefined && v !== "") {
+          row[label] = Number(v);
+        } else if (DATE_DISPLAY_COLUMNS.has(label)) {
+          row[label] = formatReportDate(v);
+        } else {
+          row[label] = v;
+        }
       }
       continue;
     }

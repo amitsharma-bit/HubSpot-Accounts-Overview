@@ -23,9 +23,20 @@ const PATHS: Record<string, string> = {
   report: "M6 2h6l3 3v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Zm5 0v3h3M7 10h6M7 13h6M7 16h4",
 };
 
-export function Icon({ name, size = 18 }: { name: keyof typeof PATHS; size?: number }) {
+export function Icon({ name, size = 18, className }: { name: keyof typeof PATHS; size?: number; className?: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={className}
+    >
       <path d={PATHS[name]} />
     </svg>
   );

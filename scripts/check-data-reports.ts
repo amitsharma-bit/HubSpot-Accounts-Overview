@@ -17,7 +17,7 @@ try {
 }
 
 import { searchCompanies } from "../src/lib/hubspot";
-import { buildReportFilterGroups } from "../src/lib/dataReports/companyService";
+import { buildReportFilterGroups, formatReportDate } from "../src/lib/dataReports/companyService";
 import { resolveAssociations } from "../src/lib/dataReports/associations";
 import { csvHeaderLine, csvRowLine } from "../src/lib/dataReports/csv";
 import { COMPANY_REPORT_COLUMNS, findColumnDef, DEFAULT_COLUMNS } from "../src/lib/dataReports/companyProperties";
@@ -83,6 +83,13 @@ async function main() {
   const escaped = csvRowLine(["Company name"], { "Company name": "Acme, Inc." });
   assert.strictEqual(escaped, '"Acme, Inc."', "TEST FAILED: comma-containing value was not CSV-escaped");
   console.log("TEST CSV: column order preserved exactly, comma-containing values escaped correctly");
+
+  // Owner assigned date / Last Activity Date / Rooftop Last Activity display
+  // as DD-Month-Year, not HubSpot's raw ISO timestamp.
+  assert.strictEqual(formatReportDate("2026-07-14T18:51:08.344Z"), "14-July-2026", "TEST FAILED: date not formatted as DD-Month-Year");
+  assert.strictEqual(formatReportDate(null), null, "TEST FAILED: a missing date should stay null, not become a formatted garbage string");
+  assert.strictEqual(formatReportDate(""), null, "TEST FAILED: an empty-string date (HubSpot's 'not set' value) should stay null");
+  console.log("TEST date formatting: DD-Month-Year applied correctly, missing/empty dates stay null");
 
   console.log("\nAll Data Reports smoke checks passed against real HubSpot data.");
 }

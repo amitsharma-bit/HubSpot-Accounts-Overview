@@ -34,7 +34,15 @@ function scopeFilters(scope: FilterScope): PropertyFilter[] {
 // combination the sidebar produces just uses the 30-minute in-memory cache;
 // ponytail: don't persist every possible filter combination.
 async function readSnapshot(): Promise<OwnerCountsResult | null> {
-  const parsed = await getJSON<OwnerCountsResult>(SNAPSHOT_KEY);
+  let parsed: OwnerCountsResult | null;
+  try {
+    parsed = await getJSON<OwnerCountsResult>(SNAPSHOT_KEY);
+  } catch (err) {
+    // A Redis outage should fall through to a live sweep, not take down every
+    // route that reads the default-scope snapshot (status/teams/members/...).
+    console.error("[ownerCounts] snapshot read unavailable, falling back to a live sweep:", err);
+    return null;
+  }
   if (!parsed) return null;
   if (Date.now() - new Date(parsed.computedAt).getTime() < SNAPSHOT_MAX_AGE_MS) return parsed;
   return null;

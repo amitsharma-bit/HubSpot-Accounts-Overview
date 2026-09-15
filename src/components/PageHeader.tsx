@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useJson } from "@/lib/useJson";
 import { Icon } from "./Icon";
 import { ThemeToggle } from "./ThemeToggle";
@@ -14,19 +15,36 @@ const IST_FORMATTER = new Intl.DateTimeFormat("en-IN", {
   hour12: true,
 });
 
-// "Refresh Now" reloads the page rather than forcing a new ~75s HubSpot
-// sweep — the hourly cron job already keeps the Redis snapshot warm, and a
-// full sweep triggered from an unauthenticated browser button would be a
-// real abuse vector against HubSpot's rate limits. This just guarantees the
-// visible numbers match whatever the last completed refresh produced.
-function refreshNow() {
-  window.location.reload();
-}
-
 export function PageHeader({ title, subtitle }: { title: string; subtitle: string }) {
   const { data, loading, error } = useJson<{ computedAt: string }>("/api/status");
   const date = data ? new Date(data.computedAt) : null;
   const hasRefreshedAt = date && !Number.isNaN(date.getTime());
+
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshError, setRefreshError] = useState<string | null>(null);
+
+  // Forces a real HubSpot sweep (the same one the hourly cron runs) via
+  // /api/refresh-now, then reloads so every section picks up the fresh
+  // snapshot — a plain reload alone (the previous behavior) just re-read the
+  // same cached numbers, so "Last refreshed" never actually moved. The
+  // cooldown/abuse protection lives server-side in that route, not here.
+  async function refreshNow() {
+    setRefreshing(true);
+    setRefreshError(null);
+    try {
+      const res = await fetch("/api/refresh-now", { method: "POST" });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setRefreshError(body.error ?? "Refresh failed. Please try again.");
+        setRefreshing(false);
+        return;
+      }
+      window.location.reload();
+    } catch {
+      setRefreshError("Refresh failed. Please try again.");
+      setRefreshing(false);
+    }
+  }
 
   return (
     <div className="page-header-row">
@@ -35,7 +53,14 @@ export function PageHeader({ title, subtitle }: { title: string; subtitle: strin
         <p>{subtitle}</p>
       </div>
       <div className="header-right">
-        {!loading && !error && hasRefreshedAt && (
+        {refreshError && (
+          <div className="refreshed-text">
+            <div className="refreshed-value" style={{ color: "var(--color-error)" }}>
+              {refreshError}
+            </div>
+          </div>
+        )}
+        {!refreshError && !loading && !error && hasRefreshedAt && (
           <div className="refreshed-text">
             <div className="refreshed-label">Last refreshed</div>
             <div className="refreshed-value">{IST_FORMATTER.format(date)} IST</div>
@@ -45,8 +70,13 @@ export function PageHeader({ title, subtitle }: { title: string; subtitle: strin
           <span className="live-dot" />
           Live
         </span>
-        <button className="icon-btn-round" onClick={refreshNow} title="Refresh now">
-          <Icon name="refresh" size={15} />
+        <button
+          className="icon-btn-round"
+          onClick={refreshNow}
+          disabled={refreshing}
+          title={refreshing ? "Refreshing — this pulls a fresh sweep from HubSpot and can take up to a couple of minutes…" : "Refresh now"}
+        >
+          <Icon name="refresh" size={15} className={refreshing ? "icon-spin" : undefined} />
         </button>
         <ThemeToggle />
       </div>
