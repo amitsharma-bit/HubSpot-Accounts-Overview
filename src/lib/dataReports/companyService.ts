@@ -204,16 +204,25 @@ export async function* exportReportRows(def: ReportDefinition): AsyncGenerator<R
   }
 }
 
-export async function listReportOwners(): Promise<ReportOwnerOption[]> {
+/**
+ * `scope: "dashboard"` (the default the UI starts on, Phase 23) returns only
+ * active dashboard members plus the known system/bulk-import buckets.
+ * `scope: "all"` is the explicit opt-in to browse every real HubSpot owner —
+ * never shown by default, so the owner picker doesn't quietly turn back into
+ * a dump of the whole HubSpot user directory.
+ */
+export async function listReportOwners(scope: "dashboard" | "all" = "dashboard"): Promise<ReportOwnerOption[]> {
   const [owners, assignments] = await Promise.all([listOwners(), getOwnerToAssignment()]);
   const systemIds = new Set(Object.keys(SYSTEM_OWNERS).map(Number));
   return owners
     .filter((o) => o.name.trim().length > 0 && !o.archived)
+    .filter((o) => scope === "all" || assignments.has(o.ownerId) || systemIds.has(o.ownerId))
     .map((o) => ({
       ownerId: o.ownerId,
       name: o.name,
       team: assignments.get(o.ownerId)?.pod ?? "Unassigned",
       isSystemOwner: systemIds.has(o.ownerId),
+      isDashboardMember: assignments.has(o.ownerId),
     }))
     .sort((a, b) => a.name.localeCompare(b.name));
 }

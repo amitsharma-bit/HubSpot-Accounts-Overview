@@ -1,12 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // data/roster.json is read at runtime (as the one-time seed for a fresh
-  // Redis store) via a process.cwd()-relative fs.readFile, not a static
-  // import — Next's build tracer doesn't always pick that up on its own, so
-  // it's listed explicitly to guarantee it ships in the serverless bundle.
+  // data/dashboardDirectory.json (the team/member directory's one-time seed,
+  // replacing the old data/roster.json) is read at runtime via a
+  // process.cwd()-relative fs.readFile, not a static import — Next's build
+  // tracer doesn't always pick that up on its own. Every API route can
+  // transitively import rosterStore.ts (Overview, Data Assignment, Data
+  // Reports, and Control Center all read the team/member directory), so this
+  // covers the whole /api tree rather than just the /api/roster/* routes.
   outputFileTracingIncludes: {
-    "/api/roster": ["./data/roster.json"],
+    "/api/**/*": ["./data/dashboardDirectory.json"],
   },
   // ioredis isn't on Next's auto-externalized package list (verified against
   // node_modules/next/dist/docs/.../serverExternalPackages.md). Without this,

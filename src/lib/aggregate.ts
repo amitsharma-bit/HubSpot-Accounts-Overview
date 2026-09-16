@@ -3,10 +3,12 @@ import { getAssignments, getAssignedOwnerIds, getPods } from "./rosterStore";
 import { listOwners } from "./hubspot";
 import type { OwnerCountsResult, TeamTotal, MemberTotal, UnmappedOwner } from "./types";
 
-// "Pod" (data/roster.json, src/lib/rosterStore.ts) is the same concept the rest
-// of this app calls "team" — kept as `team` in these return shapes so the
-// Overview page (built before pods became dynamic/user-editable) needs no
-// changes; only the Control Center's pod-management UI speaks "pod" directly.
+// "Pod" (rosterStore.ts's Assignment.pod, a backward-compatible adapter over
+// the dashboard team/member directory in data/dashboardDirectory.json) is
+// the same concept the rest of this app calls "team" — kept as `team` in
+// these return shapes so Overview needs no changes here. getAssignments()
+// already only returns ACTIVE members on an ACTIVE team, so a deactivated
+// member or an archived team disappears from these totals automatically.
 
 export async function memberTotals(ownerCounts: OwnerCountsResult): Promise<MemberTotal[]> {
   const assignments = await getAssignments();

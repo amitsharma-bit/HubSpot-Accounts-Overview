@@ -1,0 +1,51 @@
+{
+  "teams": [
+    { "teamId": "neelima-team", "teamName": "Neelima Team", "status": "active", "managerId": "neelima-tiwari", "createdAt": "2026-09-16T00:00:00.000Z", "updatedAt": "2026-09-16T00:00:00.000Z" },
+    { "teamId": "saarthak-team", "teamName": "Saarthak Team", "status": "active", "managerId": "saarthak-seth", "createdAt": "2026-09-16T00:00:00.000Z", "updatedAt": "2026-09-16T00:00:00.000Z" },
+    { "teamId": "prince-team", "teamName": "Prince Team", "status": "active", "managerId": "prince-arora", "createdAt": "2026-09-16T00:00:00.000Z", "updatedAt": "2026-09-16T00:00:00.000Z" },
+    { "teamId": "central-team", "teamName": "Central Team", "status": "active", "managerId": null, "createdAt": "2026-09-16T00:00:00.000Z", "updatedAt": "2026-09-16T00:00:00.000Z" },
+    { "teamId": "archit-team", "teamName": "Archit Team", "status": "active", "managerId": "archit-gupta", "createdAt": "2026-09-16T00:00:00.000Z", "updatedAt": "2026-09-16T00:00:00.000Z" }
+  ],
+  "members": [
+    { "memberId": "neelima-tiwari", "name": "Neelima Tiwari", "email": null, "hubspotOwnerId": 27537035, "teamId": "neelima-team", "role": "Manager", "status": "active" },
+    { "memberId": "dave-purgason", "name": "Dave Purgason", "email": null, "hubspotOwnerId": 163258461, "mergedOwnerIds": [79690525], "teamId": "neelima-team", "role": "AE", "status": "active", "note": "Merged legacy owner record 79690525 (\"David Purgason\") into this entry." },
+    { "memberId": "priyanka-sambyal", "name": "Priyanka Sambyal", "email": null, "hubspotOwnerId": 70740200, "teamId": "neelima-team", "role": "SDR", "status": "active" },
+    { "memberId": "pallav-pandey", "name": "Pallav Pandey", "email": null, "hubspotOwnerId": 68537322, "teamId": "neelima-team", "role": "AE", "status": "active" },
+    { "memberId": "jatin-arora", "name": "Jatin Arora", "email": null, "hubspotOwnerId": 159882968, "teamId": "neelima-team", "role": "AE", "status": "active" },
+    { "memberId": "arun-divya-prakash", "name": "Arun Divya Prakash", "email": null, "hubspotOwnerId": 82407666, "teamId": "neelima-team", "role": "AE", "status": "active" },
+    { "memberId": "simran-grover", "name": "Simran Grover", "email": null, "hubspotOwnerId": 159458372, "teamId": "neelima-team", "role": "AE", "status": "active" },
+    { "memberId": "vaibhav-kumar", "name": "Vaibhav Kumar", "email": null, "hubspotOwnerId": 159458371, "teamId": "neelima-team", "role": "SDR", "status": "active" },
+    { "memberId": "vans-k", "name": "Vans K", "email": null, "hubspotOwnerId": 60656445, "teamId": "neelima-team", "role": "AE", "status": "active" },
+    { "memberId": "anisha-jaiswal", "name": "Anisha Jaiswal", "email": null, "hubspotOwnerId": 160214774, "teamId": "neelima-team", "role": "SDR", "status": "active" },
+    { "memberId": "shubham-singha", "name": "Shubham Singha", "email": null, "hubspotOwnerId": 164380450, "teamId": "neelima-team", "role": "SDR", "status": "active" },
+    { "memberId": "kshitij-agarwal", "name": "Kshitij Agarwal", "email": null, "hubspotOwnerId": 62715106, "teamId": "neelima-team", "role": "SDR", "status": "active" },
+    { "memberId": "utsav-yadav", "name": "Utsav Yadav", "email": null, "hubspotOwnerId": 160353848, "teamId": "neelima-team", "role": "SDR", "status": "active" },
+    { "memberId": "shikhar-paroha", "name": "Shikhar Paroha", "email": null, "hubspotOwnerId": 79785093, "teamId": "neelima-team", "role": "SDR", "status": "active" },
+
+    { "memberId": "saarthak-seth", "name": "Saarthak Seth", "email": null, "hubspotOwnerId": 67442992, "teamId": "saarthak-team", "role": "Manager", "status": "active" },
+    { "memberId": "jace-larsen", "name": "Jace Larsen", "email": null, "hubspotOwnerId": 160768701, "teamId": "saarthak-team", "role": "AE", "status": "active" },
+    { "memberId": "liam-fallon", "name": "Liam Fallon", "email": null, "hubspotOwnerId": 160575588, "teamId": "saarthak-team", "role": "AE", "status": "active" },
+    { "memberId": "ankur-patel", "name": "Ankur Patel", "email": null, "hubspotOwnerId": 67309901, "teamId": "saarthak-team", "role": "AE", "status": "active" },
+    { "memberId": "rishabh-sharma", "name": "Rishabh Sharma", "email": null, "hubspotOwnerId": 71105578, "teamId": "saarthak-team", "role": "AE", "status": "active" },
+    { "memberId": "ashish-baweja", "name": "Ashish Baweja", "email": null, "hubspotOwnerId": 159865948, "teamId": "saarthak-team", "role": "SDR", "status": "active" },
+    { "memberId": "vikram-choudhary", "name": "Vikram Choudhary", "email": null, "hubspotOwnerId": 77266515, "teamId": "saarthak-team", "role": "SDR", "status": "active" },
+    { "memberId": "viplove-tyagi", "name": "Viplove Tyagi", "email": null, "hubspotOwnerId": 159761343, "teamId": "saarthak-team", "role": "SDR", "status": "active" },
+    { "memberId": "sahil-bakshi", "name": "Sahil Bakshi", "email": null, "hubspotOwnerId": 166522268, "teamId": "saarthak-team", "role": "SDR", "status": "active" },
+    { "memberId": "nam-harrison", "name": "Nam Harrison", "email": null, "hubspotOwnerId": 76546199, "teamId": "saarthak-team", "role": "SDR", "status": "active" },
+
+    { "memberId": "prince-arora", "name": "Prince Arora", "email": null, "hubspotOwnerId": 61267720, "teamId": "prince-team", "role": "Manager", "status": "active" },
+    { "memberId": "ketan-srivastava", "name": "Ketan Srivastava", "email": null, "hubspotOwnerId": 68537320, "teamId": "prince-team", "role": "AE", "status": "active" },
+    { "memberId": "angad-bawa", "name": "Angad Bawa", "email": null, "hubspotOwnerId": 165725658, "teamId": "prince-team", "role": "SDR", "status": "active" },
+    { "memberId": "palak-narula", "name": "Palak Narula", "email": null, "hubspotOwnerId": 164014269, "teamId": "prince-team", "role": "SDR", "status": "active" },
+    { "memberId": "kreeti-chhabra", "name": "Kreeti Chhabra", "email": null, "hubspotOwnerId": 164019464, "teamId": "prince-team", "role": "SDR", "status": "active" },
+
+    { "memberId": "ayushi-rawat", "name": "Ayushi Rawat", "email": null, "hubspotOwnerId": 166643021, "teamId": "central-team", "role": "Not Configured", "status": "active" },
+    { "memberId": "shadman-khalid", "name": "Shadman Khalid", "email": null, "hubspotOwnerId": 79900347, "teamId": "central-team", "role": "Not Configured", "status": "active" },
+
+    { "memberId": "archit-gupta", "name": "Archit Gupta", "email": null, "hubspotOwnerId": 67333606, "teamId": "archit-team", "role": "Manager", "status": "active" },
+    { "memberId": "rajveer-singh", "name": "Rajveer Singh", "email": null, "hubspotOwnerId": 69016314, "teamId": "archit-team", "role": "SDR", "status": "active" },
+    { "memberId": "drishti-aggarwal", "name": "Drishti Aggarwal", "email": null, "hubspotOwnerId": 160043135, "teamId": "archit-team", "role": "SDR", "status": "active" },
+    { "memberId": "vaansh-sharma", "name": "Vaansh Sharma", "email": null, "hubspotOwnerId": 160673631, "teamId": "archit-team", "role": "SDR", "status": "active" },
+    { "memberId": "jayant-trivedi", "name": "Jayant Trivedi", "email": null, "hubspotOwnerId": 81615528, "teamId": "archit-team", "role": "SDR", "status": "active" }
+  ]
+}

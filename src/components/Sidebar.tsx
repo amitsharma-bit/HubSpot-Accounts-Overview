@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useLayoutEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon } from "./Icon";
@@ -8,6 +8,8 @@ import { FilterPanel } from "./FilterPanel";
 import { useJson } from "@/lib/useJson";
 
 const COLLAPSE_KEY = "hs-dashboard-sidebar-collapsed";
+const EXPANDED_WIDTH = "264px";
+const COLLAPSED_WIDTH = "72px";
 
 const IST_FORMATTER = new Intl.DateTimeFormat("en-IN", {
   timeZone: "Asia/Kolkata",
@@ -55,6 +57,14 @@ function loadCollapsed(): boolean {
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(loadCollapsed);
 
+  // .content's margin-left reads --sidebar-width — kept in sync here (a
+  // layout effect, so it lands before paint and doesn't flash) rather than
+  // prop-drilling collapsed state into a separate layout wrapper, since
+  // Sidebar and .content are independent siblings in layout.tsx.
+  useLayoutEffect(() => {
+    document.documentElement.style.setProperty("--sidebar-width", collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH);
+  }, [collapsed]);
+
   function toggle() {
     setCollapsed((prev) => {
       const next = !prev;
@@ -69,14 +79,19 @@ export function Sidebar() {
 
   return (
     <aside className={`sidebar${collapsed ? " collapsed" : ""}`}>
-      <div className="brand">
-        <span className="brand-mark">HS</span>
-        {!collapsed && (
-          <span className="brand-text">
-            US Accounts
-            <span>Overview</span>
-          </span>
-        )}
+      <div className="sidebar-top-row">
+        <div className="brand">
+          <span className="brand-mark">HS</span>
+          {!collapsed && (
+            <span className="brand-text">
+              US Accounts
+              <span>Overview</span>
+            </span>
+          )}
+        </div>
+        <button className="collapse-btn" onClick={toggle} title={collapsed ? "Expand sidebar" : "Collapse sidebar"} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
+          <Icon name={collapsed ? "chevronRight" : "chevronLeft"} size={13} />
+        </button>
       </div>
 
       <nav className="sidenav">
@@ -91,12 +106,7 @@ export function Sidebar() {
         <NavLink href="/control-center" label="Control Center" icon="shield" />
       </nav>
 
-      <div className="sidebar-footer">
-        {!collapsed && <CrmStatusCard />}
-        <button className="collapse-btn" onClick={toggle} title={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
-          <Icon name={collapsed ? "chevronRight" : "chevronLeft"} size={14} />
-        </button>
-      </div>
+      <div className="sidebar-footer">{!collapsed && <CrmStatusCard />}</div>
     </aside>
   );
 }

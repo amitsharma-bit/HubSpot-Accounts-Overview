@@ -1,11 +1,13 @@
+/**
+ * The dashboard supports exactly Manager/SDR/AE (see src/config/roster.ts).
+ * "Not Configured" isn't a real role — it's a data state for a member whose
+ * role hasn't been set yet — so it deliberately falls through to the
+ * default slate color below rather than getting its own permanent entry.
+ */
 export const ROLE_COLORS: Record<string, string> = {
+  Manager: "var(--color-teal)",
   SDR: "var(--accent)",
   AE: "var(--color-purple)",
-  "SDR TL": "var(--color-orange)",
-  Manager: "var(--color-teal)",
-  "Team Lead": "var(--accent-light)",
-  AM: "var(--color-ink)",
-  Other: "var(--color-slate)",
 };
 
 export function RoleBadge({ role }: { role: string }) {

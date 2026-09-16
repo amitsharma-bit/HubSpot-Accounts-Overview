@@ -6,10 +6,11 @@ import { IconBadge } from "./Icon";
 import type { UnmappedResponse } from "@/lib/types";
 
 /**
- * The detailed unmapped-owner listing now lives in PeopleTable (every HubSpot
- * owner, searchable, editable) — this component only surfaces what that table
- * can't: the non-human system/bulk-import buckets and the true no-owner-at-all
- * count, both of which affect account totals but aren't "people" to assign.
+ * Control Center's Team Members list (src/components/controlCenter) only
+ * shows the curated dashboard directory, not every HubSpot user — this
+ * component surfaces what that list deliberately excludes: the non-human
+ * system/bulk-import buckets and the true no-owner-at-all count, both of
+ * which affect account totals but aren't dashboard members to manage.
  */
 export function UnmappedTable() {
   const { data, loading, error } = useJson<UnmappedResponse>(`/api/unmapped?page=1&pageSize=1`);

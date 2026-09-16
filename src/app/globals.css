@@ -16,6 +16,7 @@
   --color-slate: #7c8ba5;
   --color-ink: #20303f;
   --color-error: #dc3545;
+  --sidebar-width: 264px;
   --radius: 18px;
   --radius-sm: 10px;
   --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 6px 18px -12px rgba(16, 24, 40, 0.12);
@@ -133,7 +134,7 @@ a {
 }
 
 .sidebar {
-  width: 264px;
+  width: var(--sidebar-width);
   flex: none;
   background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(20px) saturate(180%);
@@ -142,11 +143,19 @@ a {
   flex-direction: column;
   padding: 1.25rem 0.9rem;
   gap: 1.5rem;
-  position: sticky;
+  /* Fixed, not sticky — sticky depends on which ancestor ends up being the
+     actual scroll container, and body's overflow-x:hidden above silently
+     computes body's overflow-y to auto per the CSS overflow spec, which is
+     exactly the kind of thing that quietly breaks position:sticky. Fixed is
+     unambiguous: always relative to the viewport, sidebar never moves when
+     .content scrolls. */
+  position: fixed;
   top: 0;
+  left: 0;
   height: 100vh;
   overflow-y: auto;
   overflow-x: hidden;
+  z-index: 20;
   transition: width 220ms var(--ease), background 200ms ease;
 }
 
@@ -165,11 +174,18 @@ a {
   padding-right: 0.6rem;
 }
 
+.sidebar-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
 .collapse-btn {
-  align-self: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--muted);
@@ -400,10 +416,12 @@ a {
 .content {
   flex: 1;
   min-width: 0;
+  margin-left: var(--sidebar-width);
   padding: 1.75rem 2rem 3rem;
   display: flex;
   flex-direction: column;
   gap: 1.75rem;
+  transition: margin-left 220ms var(--ease);
 }
 
 .page-header-row {
@@ -577,6 +595,7 @@ a {
     flex-direction: column;
   }
   .content {
+    margin-left: 0;
     padding: 1.25rem 1rem 2rem;
   }
   .card-grid {

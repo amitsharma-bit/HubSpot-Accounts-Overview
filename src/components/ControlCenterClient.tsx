@@ -2,34 +2,26 @@
 
 import { useState } from "react";
 import { useJson } from "@/lib/useJson";
-import { AssignmentForm } from "./AssignmentForm";
-import { PodPanel } from "./PodPanel";
-import { PeopleTable } from "./PeopleTable";
+import { TeamManagementBar } from "./controlCenter/TeamManagementBar";
+import { TeamsSummary } from "./controlCenter/TeamsSummary";
+import { MembersDirectory } from "./controlCenter/MembersDirectory";
 import { TableSkeleton } from "./Skeletons";
-import type { Person } from "@/app/api/roster/people/route";
-import type { Assignment } from "@/lib/rosterStore";
+import type { DashboardTeam, DashboardMember } from "@/lib/rosterStore";
 
 export function ControlCenterClient() {
   const [refetchKey, setRefetchKey] = useState(0);
-  const [editingPerson, setEditingPerson] = useState<Person | null>(null);
+  const { data, loading } = useJson<{ teams: DashboardTeam[]; members: DashboardMember[] }>(`/api/roster?r=${refetchKey}`);
 
-  const { data: roster, loading: rosterLoading } = useJson<{ assignments: Assignment[]; pods: string[] }>(
-    `/api/roster?r=${refetchKey}`
-  );
-  const { data: peopleData, loading: peopleLoading } = useJson<{ people: Person[] }>(`/api/roster/people?r=${refetchKey}`);
+  if (loading || !data) return <TableSkeleton />;
 
-  if (rosterLoading || peopleLoading || !roster || !peopleData) return <TableSkeleton />;
+  const refresh = () => setRefetchKey((k) => k + 1);
+  const activeTeams = data.teams.filter((t) => t.status === "active");
 
   return (
-    <>
-      <AssignmentForm
-        people={peopleData.people}
-        pods={roster.pods}
-        editingPerson={editingPerson}
-        onSaved={() => setRefetchKey((k) => k + 1)}
-      />
-      <PodPanel pods={roster.pods} assignments={roster.assignments} />
-      <PeopleTable people={peopleData.people} onEdit={setEditingPerson} />
-    </>
+    <div className="section">
+      <TeamManagementBar teams={activeTeams} onChanged={refresh} />
+      <TeamsSummary teams={data.teams} members={data.members} onChanged={refresh} />
+      <MembersDirectory teams={activeTeams} onChanged={refresh} />
+    </div>
   );
 }

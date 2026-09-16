@@ -95,6 +95,8 @@ export type ReportOwnerOption = {
   name: string;
   team: string;
   isSystemOwner: boolean;
+  /** True when this owner is an active dashboard member (see src/lib/rosterStore.ts) — false for a raw HubSpot user not (or no longer) on the dashboard. */
+  isDashboardMember: boolean;
 };
 
 export type ReportRow = Record<string, string | number | null>;

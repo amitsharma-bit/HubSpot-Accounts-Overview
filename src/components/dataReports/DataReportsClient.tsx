@@ -38,6 +38,7 @@ export function DataReportsClient() {
   const [ownerIds, setOwnerIds] = useState<number[]>([]);
   const [includeUnassigned, setIncludeUnassigned] = useState(false);
   const [ownerSearch, setOwnerSearch] = useState("");
+  const [ownerScope, setOwnerScope] = useState<"dashboard" | "all">("dashboard");
   const [columns, setColumns] = useState<string[]>(DEFAULT_COLUMNS);
   const [filters, setFilters] = useState<ReportFilter[]>([]);
   const [columnMenuOpen, setColumnMenuOpen] = useState(false);
@@ -52,7 +53,7 @@ export function DataReportsClient() {
   const [exportedCsvUrl, setExportedCsvUrl] = useState<string | null>(null);
   const dragIndex = useRef<number | null>(null);
 
-  const { data: ownersData } = useJson<{ owners: ReportOwnerOption[] }>("/api/data-reports/owners");
+  const { data: ownersData } = useJson<{ owners: ReportOwnerOption[] }>(`/api/data-reports/owners?scope=${ownerScope}`);
   const { data: savedReportsData } = useJson<{ reports: SavedReport[] }>(savedReportsOpen ? "/api/data-reports/saved-reports" : null);
   const { data: recentExportsData } = useJson<{ exports: { id: string; reportName: string; recordCount: number; exportedAt: string }[] }>(
     "/api/data-reports/recent-exports"
@@ -230,7 +231,13 @@ export function DataReportsClient() {
 
       {/* -------------------- Company Owner -------------------- */}
       <div className="panel">
-        <div className="panel-title">Company Owner</div>
+        <div className="panel-title-row">
+          <div className="panel-title">Company Owner</div>
+          <label className="muted" style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontWeight: 600 }}>
+            <input type="checkbox" checked={ownerScope === "all"} onChange={(e) => setOwnerScope(e.target.checked ? "all" : "dashboard")} />
+            Show all HubSpot owners (not just active dashboard members)
+          </label>
+        </div>
         <label className="search-box-compact" style={{ width: 280 }}>
           <input placeholder="Search owners…" value={ownerSearch} onChange={(e) => setOwnerSearch(e.target.value)} />
         </label>

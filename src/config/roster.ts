@@ -1,24 +1,25 @@
 /**
  * Static, code-level concepts that are NOT user-editable roster data.
  *
- * The actual owner -> role/pod assignments live in data/roster.json, managed
- * through src/lib/rosterStore.ts and editable from the Control Center page.
- * This file only holds the Role enum (a fixed set of job titles the app
- * understands) and the system-owner bucket list (bulk-import/holding owners
- * that are never real reps, however they're assigned).
+ * The actual dashboard team/member directory lives in Redis
+ * (src/lib/rosterStore.ts), seeded once from data/dashboardDirectory.json,
+ * and is managed entirely from the Control Center — see rosterStore.ts's
+ * doc comment for the HubSpot-users vs. dashboard-members architecture.
  */
 
-export type Role = "SDR" | "AE" | "SDR TL" | "Manager" | "Team Lead" | "AM" | "Other";
+/** The dashboard supports exactly these three roles — nothing else, by design. */
+export type Role = "Manager" | "SDR" | "AE";
 
-export const ROLE_ORDER: Role[] = ["SDR", "AE", "SDR TL", "Manager", "Team Lead", "AM", "Other"];
+export const ROLE_ORDER: Role[] = ["Manager", "SDR", "AE"];
 
-/** The default/no-pod sentinel value, always present in the pods list. */
-export const UNASSIGNED_POD = "Unassigned";
+export function isValidRole(value: string): value is Role {
+  return (ROLE_ORDER as string[]).includes(value);
+}
 
 /**
  * Non-human bulk-import / holding-bucket owners. These own real US accounts but
  * are never reps — they get their own labeled bucket in the UI, kept separate
- * from both pod totals and the genuine "Unmapped Owner" list. See
+ * from both team totals and the genuine "Unmapped Owner" list. See
  * src/lib/aggregate.ts and the Control Center page.
  */
 export const SYSTEM_OWNERS: Record<number, string> = {
